@@ -10,30 +10,25 @@ ENV ROS_PYTHON_VERSION=3
 ENV ROS_DISTRO=humble
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 
-RUN apt-get update && apt-get install libacl1-dev -y 
+RUN apt-get update && apt-get install libacl1-dev libfmt-dev librange-v3-dev -y 
 
 RUN mkdir -p ${ROS_ROOT}/src && \
     cd ${ROS_ROOT} && \
     rosinstall_generator --deps --rosdistro ${ROS_DISTRO} ros2_control ros2_controllers | vcs import src 
-
-RUN ls -al ${ROS_ROOT}
+RUN pip3 install Jinja2 typeguard
+RUN ls -al ${ROS_ROOT} /usr/local/
 # This takes a few hours to build
-RUN source ${ROS_ROOT}/setup.bash && \
+RUN source ${ROS_ROOT}/install/setup.bash && \
     cd ${ROS_ROOT} && \
     apt-get update && \
-    rosdep install -y \
-      --ignore-src \
-      --from-paths src \
-      --rosdistro ${ROS_DISTRO} \
-      --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-5.3.1 urdfdom_headers libopencv-dev libopencv-contrib-dev libopencv-imgproc-dev python-opencv python3-opencv" &&\
-    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo  --packages-skip cyclonedds rmw_cyclonedds_cpp gmock && \
-    rm -Rf src build log 
+    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo  --packages-up-to ros2_control ros2_controllers
+    # rm -Rf src build log 
 
 RUN mkdir -p ${ROS_ROOT}/src && \
-    source ${ROS_ROOT}/setup.bash && \
+    source ${ROS_ROOT}/install/setup.bash && \
     cd ${ROS_ROOT} && \
     rosinstall_generator --rosdistro ${ROS_DISTRO} xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters | vcs import src && \
-    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo --packages-select xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters && \
-    rm -Rf src build log 
+    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo --packages-select xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters
+    #rm -Rf src build log 
 
 RUN apt-get update && apt-get install net-tools usbutils libpcl-dev gdb -y
