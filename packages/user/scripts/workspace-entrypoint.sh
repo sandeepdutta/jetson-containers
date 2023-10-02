@@ -18,6 +18,6 @@ source /opt/ros/${ROS_DISTRO}/install/setup.bash
 #rosdep update
 
 # Restart udev daemon
-#sudo service udev restart
+sudo service udev restart
 
 $@

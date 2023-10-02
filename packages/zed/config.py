@@ -4,7 +4,7 @@ from jetson_containers import L4T_VERSION
 from packaging.version import Version
 
 # https://www.stereolabs.com/developers/release/
-latest_zed_version = Version('35.3.1')
+latest_zed_version = Version('35.4.1')
 
 if L4T_VERSION > latest_zed_version:
     L4T_VERSION = latest_zed_version

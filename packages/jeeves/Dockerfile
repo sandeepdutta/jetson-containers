@@ -27,8 +27,17 @@ RUN source ${ROS_ROOT}/install/setup.bash && \
 RUN mkdir -p ${ROS_ROOT}/src && \
     source ${ROS_ROOT}/install/setup.bash && \
     cd ${ROS_ROOT} && \
-    rosinstall_generator --rosdistro ${ROS_DISTRO} xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters | vcs import src && \
-    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo --packages-select xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters
+    rosinstall_generator --rosdistro ${ROS_DISTRO} xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters diagnostics diagnostic_updater | vcs import src && \
+    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo --packages-select xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters diagnostics diagnostic_updater
     #rm -Rf src build log 
 
-RUN apt-get update && apt-get install net-tools usbutils libpcl-dev gdb -y
+RUN mkdir -p ${ROS_ROOT}/src && \
+    cd ${ROS_ROOT} && \
+    source ${ROS_ROOT}/install/setup.bash && \
+    apt-get install g++ && \
+    rosinstall_generator --rosdistro ${ROS_DISTRO} nmea_msgs geographic_msgs  | vcs import src && \
+    apt-get update && \
+    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo --packages-select nmea_msgs geographic_msgs 
+
+
+RUN apt-get update && apt-get install net-tools usbutils libpcl-dev libgeographic-dev gdb libpcap-dev iputils-ping -y
