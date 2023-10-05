@@ -53,8 +53,9 @@ if [ $ARCH = "aarch64" ]; then
 		--privileged \
 		--volume /tmp/nv_jetson_model:/tmp/nv_jetson_model \
 		-v /home/sandeep/workspaces:/workspaces \
-    		-v /dev/*:/dev/* \
-    		-v /etc/localtime:/etc/localtime:ro \
+    	-v /dev/*:/dev/* \
+    	-v /etc/localtime:/etc/localtime:ro \
+		-v /run/jtop.sock:/run/jtop.sock \
 		--volume $ROOT/data:/data \
 		--device /dev/snd \
 		--device /dev/bus/usb \

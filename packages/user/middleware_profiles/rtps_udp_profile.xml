@@ -16,6 +16,9 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
         <transport_descriptor>
             <transport_id>UdpTransport</transport_id>
             <type>UDPv4</type>
+            <interfaceWhiteList>
+                <address>wlan0</address>
+            </interfaceWhiteList>
         </transport_descriptor>
     </transport_descriptors>
 

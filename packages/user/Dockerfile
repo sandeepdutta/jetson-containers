@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
+RUN pip3 install jetson-stats 
+
 # Reuse triton-server user as 'admin' user if exists
 RUN if [ $(getent group triton-server) ]; then \
         groupmod -o --gid ${USER_GID} -n ${USERNAME} triton-server ; \
@@ -42,6 +44,10 @@ RUN echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
 RUN mkdir -p /usr/local/bin/scripts
 COPY scripts/*entrypoint.sh /usr/local/bin/scripts/
 RUN  chmod +x /usr/local/bin/scripts/*.sh
+
+# PATCH to enable building isaac_ros_nitros
+RUN wget https://raw.githubusercontent.com/NVIDIA-ISAAC-ROS/isaac_ros_common/main/docker/patches/libcudacxx_aarch64_cuda_11_4.diff -P /tmp && \
+sudo patch -i /tmp/libcudacxx_aarch64_cuda_11_4.diff /usr/local/cuda-11.4/targets/aarch64-linux/include/cuda/std/detail/libcxx/include/cmath
 
 # Copy middleware profiles
 RUN mkdir -p /usr/local/share/middleware_profiles

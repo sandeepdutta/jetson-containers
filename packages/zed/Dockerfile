@@ -39,3 +39,5 @@ RUN apt-get update -y || true ; apt-get install --no-install-recommends python3 
 
 #This symbolic link is needed to use the streaming features on Jetson inside a container
 RUN ln -sf /usr/lib/aarch64-linux-gnu/tegra/libv4l2.so.0 /usr/lib/aarch64-linux-gnu/libv4l2.so
+
+COPY SN*.conf /usr/local/zed/settings/
