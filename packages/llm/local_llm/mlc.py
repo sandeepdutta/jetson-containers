@@ -33,7 +33,17 @@ class MLCModel(LocalLM):
         self.config.vocab_size = json_config['vocab_size']
         
         self.conv_template = self.model.chat_config.conv_template
-        self.model.reset_chat(ChatConfig(conv_template='LM', max_gen_len=64))  # disable internal templating
+
+        if 'llama-2' in self.conv_template or 'llama-2' in self.config.name.lower():
+            conv_config = ConvConfig(stop_tokens=[2], stop_str='[INST]') #</s>)
+        else:
+            conv_config = None
+            
+        self.model.reset_chat(ChatConfig(
+            max_gen_len=128,
+            conv_template='LM', # disable internal templating
+            conv_config=conv_config
+        ))
         
         print(self.model.chat_config)
         print(self.model.chat_config.conv_config)
@@ -58,9 +68,12 @@ class MLCModel(LocalLM):
         
         return stream
 
-    def embed_text(self, text, return_tensors='np'):  # pt, np, tvm
-        embedding = self.embedding_cache.get(text)
-        
+    def embed_text(self, text, return_tensors='np', use_cache=False):  # pt, np, tvm
+        if use_cache:
+            embedding = self.embedding_cache.get(text)
+        else:
+            embedding = None
+            
         if embedding is None:
             embedding = self.model.embed_text(text)
             self.embedding_cache[text] = embedding
