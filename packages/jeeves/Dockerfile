@@ -25,6 +25,7 @@ RUN mkdir -p ${ROS_ROOT}/src && \
     cd ${ROS_ROOT} && \
     cmake --version && \
     rosinstall_generator --deps --rosdistro ${ROS_DISTRO} ros2_control ros2_controllers | vcs import src 
+
 RUN pip3 install Jinja2 typeguard
 RUN ls -al ${ROS_ROOT} /usr/local/
 # This takes a few hours to build
@@ -47,7 +48,8 @@ RUN mkdir -p ${ROS_ROOT}/src && \
     apt-get install g++ && \
     rosinstall_generator --rosdistro ${ROS_DISTRO} nmea_msgs geographic_msgs  | vcs import src && \
     apt-get update && \
-    colcon build --merge-install --packages-select nmea_msgs geographic_msgs 
+    colcon build --merge-install --packages-select nmea_msgs geographic_msgs && \
+    rm -Rf src build log
 
 
 # Set Python3 as default
@@ -112,6 +114,69 @@ RUN python3 -m pip install -U \
 # Install Git-LFS
 RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
         apt-get update && apt-get install -y \
-        git-lfs 
+        git-lfs  python3-rosdep libbondcpp-dev
+
+RUN apt-get update \     
+    && cd ${ROS_ROOT} \
+    && rm -Rf src build log \
+    && mkdir -p ${ROS_ROOT}/src \
+    && source ${ROS_ROOT}/install/setup.bash \
+    && rosinstall_generator --rosdistro humble bond bond_core bondcpp bondpy smclib ompl | vcs import src \
+    && colcon build --merge-install  \
+    && rm -Rf src build log 
+
+
+# Install nav2
+RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
+    && git clone https://github.com/ros-planning/navigation2.git && cd navigation2 && git checkout ec49c2772a0926c86ca83a4933c664744712e2e9 && cd .. \
+    && git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git && cd BehaviorTree.CPP && git checkout a363bdcae88350bc748598a7d2950e300859469c && cd .. 
+
+RUN source ${ROS_ROOT}/install/setup.bash && cd ${ROS_ROOT} \
+#    && rosdep init \
+    && rosdep update \
+    && rosdep install -y -r --ignore-src --from-paths src --rosdistro ${ROS_DISTRO} src/navigation2
+
+RUN source ${ROS_ROOT}/install/setup.bash && cd ${ROS_ROOT} \
+    && colcon build --merge-install  --packages-up-to-regex nav2* --packages-ignore nav2_system_tests 
+    
+#    && rm -Rf src build log \
+#    && rm -rf /var/lib/apt/lists/* \
+#    && apt-get clean
+
+# Install vda5050_msgs
+RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
+    && git clone https://github.com/ipa320/vda5050_msgs.git vda5050_root \
+    && cd vda5050_root && git checkout ros2 && cd .. \
+    && mv vda5050_root/vda5050_msgs/ vda5050_msgs \
+    && rm -rf vda5050_root \
+    && source ${ROS_ROOT}/install/setup.bash && cd ${ROS_ROOT} \
+    && colcon build --merge-install --packages-up-to vda5050_msgs 
+#    && rm -Rf src build log \
+#    && rm -rf /var/lib/apt/lists/* \
+#    && apt-get clean
+
+# Install rosbridge_library
+RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
+    && git clone https://github.com/RobotWebTools/rosbridge_suite.git && cd rosbridge_suite && git checkout ros2 && cd .. \
+    && source ${ROS_ROOT}/install/setup.bash && cd ${ROS_ROOT} \
+    && rosdep install -y -r --ignore-src --from-paths src --rosdistro ${ROS_DISTRO} \
+    && colcon build --merge-install --packages-up-to rosbridge_library rosbridge_server 
+#    && rm -Rf src build log \
+#    && rm -rf /var/lib/apt/lists/* \
+#    && apt-get clean
+
+# Install patched image_proc package with backported resize node fix
+# https://github.com/ros-perception/image_pipeline/pull/786
+#RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
+#    && git clone https://github.com/ros-perception/image_pipeline.git && cd image_pipeline && git checkout humble \
+#    && git config user.email "builder@nvidia.com" && git config user.name "NVIDIA Builder" \
+#    && git remote add fork https://github.com/schornakj/image_pipeline.git && git fetch fork && git cherry-pick fork/pr-backport-693 \
+#    && source ${ROS_ROOT}/install/setup.bash && cd ${ROS_ROOT} \
+#    && rosdep install -y -r --ignore-src --from-paths src --rosdistro ${ROS_DISTRO} \
+#    && colcon build --merge-install --packages-up-to image_proc \
+#    && echo "image_pipeline https://github.com/ros-perception/image_pipeline/pull/786" >> ${ROS_ROOT}/VERSION 
+#    && rm -Rf src build log \
+#    && rm -rf /var/lib/apt/lists/* \
+#    && apt-get clean
 
 RUN apt-get update && apt-get install net-tools usbutils libpcl-dev libgeographic-dev gdb libpcap-dev iputils-ping -y
