@@ -1,4 +1,4 @@
-![a header for a software project about building containers for AI and machine learning](/docs/images/header.jpg)
+![a header for a software project about building containers for AI and machine learning](https://raw.githubusercontent.com/dusty-nv/jetson-containers/docs/docs/images/header.jpg)
 
 # Machine Learning Containers for Jetson and JetPack
 
@@ -9,11 +9,12 @@ Modular container build system that provides various [**AI/ML packages**](packag
 | | |
 |---|---|
 | **ML** | [`pytorch`](packages/pytorch) [`tensorflow`](packages/tensorflow) [`onnxruntime`](packages/onnxruntime) [`deepstream`](packages/deepstream) [`tritonserver`](packages/tritonserver) [`jupyterlab`](packages/jupyterlab) [`stable-diffusion`](packages/diffusion/stable-diffusion-webui) |
-| **LLM** | [`transformers`](packages/llm/transformers) [`text-generation-webui`](packages/llm/text-generation-webui) [`text-generation-inference`](packages/llm/text-generation-inference) [`llava`](packages/llm/llava) [`llama.cpp`](packages/llm/llama_cpp) [`exllama`](packages/llm/exllama) [`awq`](packages/llm/awq) [`AutoGPTQ`](packages/llm/auto_gptq) [`GPTQ-for-LLaMa`](packages/llm/gptq-for-llama) [`MiniGPT-4`](packages/llm/minigpt4) [`langchain`](packages/llm/langchain) [`optimum`](packages/llm/optimum) [`bitsandbytes`](packages/llm/bitsandbytes) [`nemo`](packages/nemo) [`riva`](packages/riva-client) |
+| **LLM** | [`transformers`](packages/llm/transformers) [`text-generation-webui`](packages/llm/text-generation-webui) [`text-generation-inference`](packages/llm/text-generation-inference) [`llava`](packages/llm/llava) [`llama.cpp`](packages/llm/llama_cpp) [`exllama`](packages/llm/exllama) [`llamaspeak`](packages/llm/llamaspeak) [`awq`](packages/llm/awq) [`AutoGPTQ`](packages/llm/auto_gptq) [`MiniGPT-4`](packages/llm/minigpt4) [`langchain`](packages/llm/langchain) [`optimum`](packages/llm/optimum) [`bitsandbytes`](packages/llm/bitsandbytes) [`nemo`](packages/nemo) [`riva`](packages/riva-client) |
 | **L4T** | [`l4t-pytorch`](packages/l4t/l4t-pytorch) [`l4t-tensorflow`](packages/l4t/l4t-tensorflow) [`l4t-ml`](packages/l4t/l4t-ml) [`l4t-diffusion`](packages/l4t/l4t-diffusion) [`l4t-text-generation`](packages/l4t/l4t-text-generation) |
-| **VIT** | [`Track Anything (TAM)`](packages/vit/tam) [`Segment Anything (SAM)`](packages/vit/sam) [`NanoSAM`](packages/vit/nanosam) |
+| **VIT** | [`NanoOWL`](packages/vit/nanoowl) [`NanoSAM`](packages/vit/nanosam) [`Segment Anything (SAM)`](packages/vit/sam) [`Track Anything (TAM)`](packages/vit/tam) |
 | **CUDA** | [`cupy`](packages/cupy) [`cuda-python`](packages/cuda-python) [`pycuda`](packages/pycuda) [`numba`](packages/numba) [`cudf`](packages/rapids/cudf) [`cuml`](packages/rapids/cuml) |
 | **Robotics** | [`ros`](packages/ros) [`ros2`](packages/ros) [`opencv:cuda`](packages/opencv) [`realsense`](packages/realsense) [`zed`](packages/zed) |
+| **VectorDB** | [`NanoDB`](packages/vectordb/nanodb) [`FAISS`](packages/vectordb/faiss) [`RAFT`](packages/rapids/raft) |
 
 See the [**`packages`**](packages) directory for the full list, including pre-built container images and CI/CD status for JetPack/L4T.
 
@@ -51,7 +52,7 @@ Refer to the [System Setup](/docs/setup.md) page for tips about setting up your 
 
 ```bash
 sudo apt-get update && sudo apt-get install git python3-pip
-git clone https://github.com/dusty-nv/jetson-containers
+git clone --depth=1 https://github.com/dusty-nv/jetson-containers
 cd jetson-containers
 pip3 install -r requirements.txt
 ./run.sh $(./autotag l4t-pytorch)
