@@ -8,6 +8,7 @@ import queue
 import threading
 import subprocess
 import random
+import logging
 
 import torch
 import numpy as np
@@ -35,10 +36,8 @@ class MLCModel(LocalLM):
                          or the quantization method to use (q4f16_1, q4f16_ft, ect)          
                          If a path, there should be a .so in this dir, with params/ 
                          directory under it containing the weights and MLC config.
-                         
-          quant_cache (str) -- 
         """
-        super(MLCModel, self).__init__(**kwargs)
+        super(MLCModel, self).__init__(model_path, **kwargs)
 
         # perform quantization if needed
         if not quant:
@@ -47,17 +46,14 @@ class MLCModel(LocalLM):
         if not os.path.isdir(quant):
             quant = MLCModel.quantize(model_path, quant, **kwargs)
             
-        self.config.quant = quant.split('-')[-1]  # recover the quant method
-        
+        self.config.quant = quant.split('-')[-1]  # recover the quant method        
         self.quant_path = quant
-        self.model_path = model_path
-        
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=False)
         
         # initialize tvm device
         self.device = tvm.runtime.cuda(0)  # tvm.runtime.Device(tvm.runtime.Device.kDLCUDAManaged, 0)
         assert(self.device.exist) # this is needed to initialize CUDA?
-        print(f"-- device={self.device}, name={self.device.device_name}, compute={self.device.compute_version}, max_clocks={self.device.max_clock_rate}, multiprocessors={self.device.multi_processor_count}, max_thread_dims={self.device.max_thread_dimensions}, api_version={self.device.api_version}, driver_version={self.device.driver_version}")
+        logging.info(f"device={self.device}, name={self.device.device_name}, compute={self.device.compute_version}, max_clocks={self.device.max_clock_rate}, multiprocessors={self.device.multi_processor_count}, max_thread_dims={self.device.max_thread_dimensions}, api_version={self.device.api_version}, driver_version={self.device.driver_version}")
 
         # load model config
         with open(os.path.join(quant, 'params/mlc-chat-config.json'), 'r') as file:
@@ -72,9 +68,9 @@ class MLCModel(LocalLM):
         self.module_path = os.path.join(quant, os.path.basename(quant) + '-cuda.so')
         
         if not os.path.isfile(self.module_path):
-            raise IOError(f"-- MLC couldn't find {self.module_path}")
+            raise IOError(f"MLC couldn't find {self.module_path}")
             
-        print(f"-- loading {self.config.name} from {self.module_path}")
+        logging.info(f"loading {self.config.name} from {self.module_path}")
         load_time_begin = time.perf_counter()
         self.module = tvm.runtime.load_module(self.module_path)
         
@@ -155,7 +151,7 @@ class MLCModel(LocalLM):
         cmd += f"--max-seq-len {AutoConfig.from_pretrained(model).max_position_embeddings} "
         cmd += f"--artifact-path {output}"
         
-        print(f"-- running MLC quantization:\n\n{cmd}\n\n")
+        logging.info(f"running MLC quantization:\n\n{cmd}\n\n")
         subprocess.run(cmd, executable='/bin/bash', shell=True, check=True)  
         
         return quant_path
@@ -186,7 +182,7 @@ class MLCModel(LocalLM):
             self.embedding_cache[text] = embedding
             self.device = embedding.device
         else:
-            print('TEXT EMBEDDING CACHE HIT')
+            logging.debug(f'TEXT EMBEDDING CACHE HIT ({text})')
          
         if return_tensors == 'np':
             embedding = embedding.numpy()

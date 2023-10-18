@@ -44,7 +44,7 @@ class CLIPModel():
         print('CLIPVisionModel', self.model)
 
         self.config.projector_name = os.path.join('liuhaotian/llava-llama-2-13b-chat-lightning-preview', 'mm_projector.bin')
-        self.config.projector_shape = (1024, 4096)
+        self.config.projector_shape = (1024, 5120)  # 4096 for 7B
         
         print(f'-- loading {self.config.projector_name}')
         

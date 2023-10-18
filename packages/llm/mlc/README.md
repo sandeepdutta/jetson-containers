@@ -15,7 +15,7 @@ First, download the original HF Transformers version of the model that you want 
 ```
 
 > [!NOTE]  
-> If you are quantizing a Llava model, you need to change `"model_type": "llava"` to `"model_type": "llama"` in the original HF Transformers [`config.json`](https://huggingface.co/liuhaotian/llava-v1.5-7b/blob/main/config.json) version of the model (you can patch this locally after it's been downloaded)
+> If you're quantizing Llava, you need to change `"model_type": "llava"` to `"model_type": "llama"` in the original model's [`config.json`](https://huggingface.co/liuhaotian/llava-v1.5-7b/blob/main/config.json) version of the model (you can patch this locally after it's been downloaded under `/data/models/huggingface`)
 
 Then perform W4A16 quantization on the model:
 
@@ -40,16 +40,16 @@ To benchmark the quantized model, run the [`benchmark.py`](benchmark.py) script:
 ```bash
 ./run.sh $(./autotag mlc) \
   python3 /opt/mlc-llm/benchmark.py \
-    --model /data/models/mlc/ft_mqa/Llama-2-7b-chat-hf-q4f16_ft/params \
+    --model /data/models/mlc/dist/Llama-2-7b-chat-hf-q4f16_ft/params \
     --prompt /data/prompts/completion_16.json \
     --max-new-tokens 128
 ```
 
-The `--prompt` file used controls the number of input tokens (context length) - there are generated prompt sequences under `/data/prompts` for up to 3968 tokens.  The `--max-new-tokens` argument specifies how many output tokens the model generates for each prompt.
+The `--prompt` file used controls the number of input tokens (context length) - there are generated prompt sequences under `/data/prompts` for up to 4096 tokens.  The `--max-new-tokens` argument specifies how many output tokens the model generates for each prompt.
 
 ```
 AVERAGE OVER 10 RUNS:
-/data/models/mlc/ft_mqa/Llama-2-7b-chat-hf-q4f16_ft/params:  prefill_time 0.027 sec, prefill_rate 582.8 tokens/sec, decode_time 2.986 sec, decode_rate 42.9 tokens/sec
+/data/models/mlc/dist/Llama-2-7b-chat-hf-q4f16_ft/params:  prefill_time 0.027 sec, prefill_rate 582.8 tokens/sec, decode_time 2.986 sec, decode_rate 42.9 tokens/sec
 ```
 
 The prefill time is how long the model takes to process the input context before it can start generating output tokens.  The decode rate is the speed at which it generates output tokens.  These results are averaged over the number of prompts, minus the first prompt as a warm-up.
@@ -64,13 +64,6 @@ The prefill time is how long the model takes to process the input context before
 | &nbsp;&nbsp;&nbsp;Dependencies | [`build-essential`](/packages/build-essential) [`python`](/packages/python) [`numpy`](/packages/numpy) [`cmake`](/packages/cmake/cmake_pip) [`onnx`](/packages/onnx) [`pytorch`](/packages/pytorch) [`torchvision`](/packages/pytorch/torchvision) [`huggingface_hub`](/packages/llm/huggingface_hub) [`rust`](/packages/rust) [`bitsandbytes`](/packages/llm/bitsandbytes) [`auto_gptq`](/packages/llm/auto_gptq) [`transformers`](/packages/llm/transformers) |
 | &nbsp;&nbsp;&nbsp;Dockerfile | [`Dockerfile`](Dockerfile) |
 | &nbsp;&nbsp;&nbsp;Images | [`dustynv/mlc:r35.2.1`](https://hub.docker.com/r/dustynv/mlc/tags) `(2023-10-13, 9.0GB)`<br>[`dustynv/mlc:r35.3.1`](https://hub.docker.com/r/dustynv/mlc/tags) `(2023-10-02, 9.0GB)`<br>[`dustynv/mlc:r35.4.1`](https://hub.docker.com/r/dustynv/mlc/tags) `(2023-09-19, 8.9GB)` |
-
-| **`mlc:dev`** | |
-| :-- | :-- |
-| &nbsp;&nbsp;&nbsp;Requires | `L4T >=34.1.0` |
-| &nbsp;&nbsp;&nbsp;Dependencies | [`build-essential`](/packages/build-essential) [`python`](/packages/python) [`numpy`](/packages/numpy) [`cmake`](/packages/cmake/cmake_pip) [`onnx`](/packages/onnx) [`pytorch`](/packages/pytorch) [`torchvision`](/packages/pytorch/torchvision) [`huggingface_hub`](/packages/llm/huggingface_hub) [`rust`](/packages/rust) [`bitsandbytes`](/packages/llm/bitsandbytes) [`auto_gptq`](/packages/llm/auto_gptq) [`transformers`](/packages/llm/transformers) |
-| &nbsp;&nbsp;&nbsp;Dependants | [`local_llm`](/packages/llm/local_llm) [`mlc:lite`](/packages/llm/mlc/mlc_lite) |
-| &nbsp;&nbsp;&nbsp;Dockerfile | [`Dockerfile.dev`](Dockerfile.dev) |
 
 </details>
 
