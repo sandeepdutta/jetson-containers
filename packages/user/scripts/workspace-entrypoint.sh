@@ -11,7 +11,7 @@
 # Build ROS dependency
 echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc
 echo "alias ros2build='colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo'" >> ~/.bashrc
-echo "source /workspace/isacc_ros-dev/install/setup.bash >> ~/.bashrc
+echo "source /workspaces/isaac_ros-dev/install/setup.bash" >> ~/.bashrc
 echo "export CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda"
 source /opt/ros/${ROS_DISTRO}/install/setup.bash
 

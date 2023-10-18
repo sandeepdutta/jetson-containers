@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
-RUN pip3 install jetson-stats 
+RUN pip3 install jetson-stats p
 
 # Reuse triton-server user as 'admin' user if exists
 RUN if [ $(getent group triton-server) ]; then \
