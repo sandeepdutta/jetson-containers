@@ -53,6 +53,7 @@ if [ $ARCH = "aarch64" ]; then
 		--privileged \
 		--volume /tmp/nv_jetson_model:/tmp/nv_jetson_model \
 		-v /home/sandeep/workspaces:/workspaces \
+		-v /home/sandeep/workspaces/jetson-voice:/jetson-voice \
     	-v /dev/*:/dev/* \
     	-v /etc/localtime:/etc/localtime:ro \
 		-v /run/jtop.sock:/run/jtop.sock \
@@ -60,7 +61,6 @@ if [ $ARCH = "aarch64" ]; then
 		--device /dev/snd \
 		--device /dev/bus/usb \
 		--user="admin" \
-		--entrypoint /usr/local/bin/scripts/workspace-entrypoint.sh \
 		--workdir /workspaces/isaac_ros-dev \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v $HOME/.Xauthority:/home/admin/.Xauthority:rw \

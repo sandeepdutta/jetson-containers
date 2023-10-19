@@ -15,6 +15,9 @@ ARG USER_GID=1000
 RUN apt-get update && apt-get install -y \
         sudo \
         udev \
+        sox \
+        libsndfile1 \
+        ffmpeg \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
