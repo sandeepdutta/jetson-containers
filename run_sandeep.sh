@@ -60,7 +60,6 @@ if [ $ARCH = "aarch64" ]; then
 		--volume $ROOT/data:/data \
 		--device /dev/snd \
 		--device /dev/bus/usb \
-		--user="admin" \
 		--workdir /workspaces/isaac_ros-dev \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v $HOME/.Xauthority:/home/admin/.Xauthority:rw \
