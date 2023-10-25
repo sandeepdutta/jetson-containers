@@ -4,47 +4,50 @@ import inspect
 import logging
 import numpy as np
 
-from .utils import AttrDict, replace_text, print_table, ImageExtensions
+from .templates import ChatTemplate, ChatTemplates
+from .utils import AttributeDict, ImageExtensions, ImageTypes, replace_text, print_table
 
-ChatTemplates = {
 
-    # https://huggingface.co/blog/llama2#how-to-prompt-llama-2
-    'llama-2': {
-        'system_prompt': "Answer the questions.",
-        'system': '<s>[INST] <<SYS>>\n${MESSAGE}\n<</SYS>>\n\n',
-        'first': '${MESSAGE} [/INST]',
-        'user': '<s>[INST] ${MESSAGE} [/INST]',
-        'bot': ' ${MESSAGE}'  # llama-2 output already ends in </s>
-    },
+def ChatEntry(role='user', msg=None, **kwargs):
+    """
+    Create a chat entry consisting of a text message, image, ect as input.  
     
-    # https://github.com/lm-sys/FastChat/blob/main/docs/vicuna_weights_version.md#prompt-template
-    'vicuna-v0': {
-        'system_prompt': "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions.",
-        'system': '${MESSAGE}\n\n',
-        'user': '### Human: ${MESSAGE}\n',
-        'bot': '### Assistant: ${MESSAGE}\n',
-    },
+    Parameters:
     
-    'vicuna-v1': {
-        'system_prompt': "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions.",
-        'system': '${MESSAGE}\n\n',
-        'user': 'USER: ${MESSAGE}\n',
-        'bot': 'ASSISTANT: ${MESSAGE}</s>\n', # TODO: does output already end in </s> ?
-    },
-}
+      role (str) -- The chat's turn template to apply, typically 'user' or 'bot'.
+                    The role should have a corresponding entry in the active ChatTemplate.
+                    
+      msg (str|image) -- If a string, it should either contain text or a path
+                         to a txt, json, or image file that will be loaded.
 
-ChatTemplates['llava-v0'] = ChatTemplates['vicuna-v0']
-ChatTemplates['llava-v1'] = ChatTemplates['vicuna-v1']
-
-ChatTemplates['llava-llama-2'] = ChatTemplates['llama-2'].copy()
-ChatTemplates['llava-llama-2'].update({
-    'system_prompt': "You are a helpful language and vision assistant. You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language."
-})
-
-for key in ChatTemplates:
-    ChatTemplates[key] = AttrDict(ChatTemplates[key])
+                         If an image, can be a np.ndarray, torch.Tensor, or PIL.Image.
+                                  
+                         If a dict, it will be passed through as the ChatEntry.
+                                  
+                         The embedding type of 'message' will attempt to be automatically
+                         determined as text/image/ect, but if not possible, you should
+                         explicitly set its type by passing it in via kwargs instead.
+     
+    kwargs:
     
-
+       For messages whose embedding type is unable to be determined automatically, or to create
+       a chat entry containing multiple message types, pass them in via kwargs like this:
+       
+         `entry = ChatEntry(role='user', text='abc', image='xyz.jpg')`
+         
+    Returns:
+    
+       A dict that has keys for 'role', 'text', 'image', ect.  This will return an AttributeDict,
+       so you can access it like entry.role, entry.text, and so on.
+    """    
+    entry = AttributeDict(role=role, **kwargs)
+    
+    if msg is not None:
+        entry[ChatHistory.embedding_type(msg)] = msg
+        
+    return entry
+    
+    
 class ChatHistory():
     """
     Multimodal chat history that can contain a mix of media including text/images.
@@ -65,47 +68,32 @@ class ChatHistory():
     
     TODO:  better caching of system prompt embeddings/ect
     """
-    def __init__(self, model, template=None, system_prompt=None):
+    def __init__(self, model, chat_template=None, system_prompt=None, **kwargs):
         """
         Parameters:
            
            model (LocalLM) -- the model instance used for embeddings
            
-           template (str|dict) -- either a chat template dict, or the name of the 
-                                  chat template to use like 'llama-2', 'vicuna-v1'
-                                  If None, will attempt to determine model type.
+           chat_template (str|dict) -- either a chat template dict, or the name of the 
+                                       chat template to use like 'llama-2', 'vicuna-v1'
+                                       If None, will attempt to determine model type.
                                   
            system_prompt (str) -- set the default system prompt
                                   if None, will use system prompt from the template.
         """
         self.model = model
         
-        if not template:
-            name = model.config.name.lower()
-            if 'llama-2' in name:
-                if 'llava' in name:
-                    template = 'llava-llama-2'
-                else:
-                    template = 'llama-2'
-            elif 'vicuna' in name:
-                if 'v1' in name:
-                    template = 'vicuna-v1'
-                else:
-                    template = 'vicuna-v0'
-            elif 'llava' in name:
-                if 'v1' in name:
-                    template = 'llava-v1'
-                else:
-                    template = 'llava-v0'
-            else:
+        if not chat_template:
+            self.template = ChatTemplate(model)
+            if self.template is None:
                 raise RuntimeError(f"Couldn't automatically determine model type from {model.config.name}, please set the --chat-template argument")
-            
-            logging.info(f"using chat template '{template}' for model {model.config.name}")
-            
-        if isinstance(template, str):
-            self.template = ChatTemplates[template].copy()
+            logging.info(f"using chat template '{self.template.name}' for model {model.config.name}")
+        elif isinstance(chat_template, str):
+            self.template = AttributeDict(ChatTemplates[chat_template])
+        elif isinstance(chat_template, dict):
+            self.template = AttributeDict(template)
         else:
-            self.template = template
+            raise TypeError(f"chat_template should be a str or dict (was {type(chat_template)})")
             
         if system_prompt:
             self.template['system_prompt'] = system_prompt
@@ -130,27 +118,17 @@ class ChatHistory():
         """
         return self.entries[entry]
         
-    def add_entry(self, role='user', input=None, **kwargs):
+    def append(self, role='user', msg=None, **kwargs):
         """
-        Add a chat entry consisting of text, image, ect.  Other inputs
-        can be specified in kwargs that have registered embedding types.
-        Role is the turn template to apply, typically 'user' or 'bot'.
+        Add a chat entry consisting of a text message, image, ect.
+        See the ChatEntry() function for description of arguments.
+        This can also accept an existing ChatEntry dict as msg.
         """
-        self.entries.append(self.create_entry(role, input, **kwargs))
+        if isinstance(msg, dict):
+            self.entries.append(msg)
+        else:
+            self.entries.append(ChatEntry(role, msg, **kwargs))
         return self.entries[-1]
-
-    def create_entry(self, role='user', input=None, **kwargs):
-        """
-        Create a chat entry consisting of text, image, ect.  Other inputs
-        can be specified in kwargs that have registered embedding types.
-        Role is the turn template to apply, typically 'user' or 'bot'.
-        """    
-        entry = AttrDict(role=role, **kwargs)
-        
-        if input is not None:
-            entry[self.embedding_type(input)] = input
-            
-        return entry
 
     def reset(self, add_system_prompt=True):
         """
@@ -159,7 +137,7 @@ class ChatHistory():
         self.entries = []
         self.kv_cache = None
         if add_system_prompt:
-            self.add_entry(role='system', text=self.template['system_prompt'])
+            self.append(role='system', text=self.template['system_prompt'])
       
     @property
     def system_prompt(self):
@@ -202,8 +180,10 @@ class ChatHistory():
         """
         if template:
             text = replace_text(template, {'${MESSAGE}': text})
+
         embedding = self.model.embed_text(text, use_cache=use_cache)
         logging.debug(f"embedding text {embedding.shape} {embedding.dtype} -> ```{text}```".replace('\n', '\\n'))
+        
         return embedding
     
     def embed_dict(self, dict, template=None):
@@ -236,11 +216,13 @@ class ChatHistory():
         """
         embeddings = [] 
 
-        if template:
+        if template: # get the text embedding for the template prefix
             template = template.split("${MESSAGE}")[0]
-            embeddings.append(self.embed_text(template, use_cache=True))
-            logging.debug(f"image template:  ```{template}```")
             
+            if len(template) > 0:
+                embeddings.append(self.embed_text(template, use_cache=True))
+                logging.debug(f"image template:  ```{template}```")
+
         embeddings.append(self.model.embed_image(image, return_tensors='np'))
         embeddings.append(self.embed_text('\n', use_cache=True))
         
@@ -266,8 +248,11 @@ class ChatHistory():
         
         for i, entry in enumerate(self.entries):
             for key in entry.copy():
-                if key not in self.embedding_functions or entry[key] is None:
-                    continue
+                if key not in self.embedding_functions:
+                    if key == 'role' or key.endswith('_embedding') or entry[key] is None:
+                        continue
+                    else:
+                        raise RuntimeError(f"chat entry had unrecognized message type '{key}'")
 
                 if 'first' in self.template and entry['role'] == 'user' and num_user_prompts == 0:
                     role_template = self.template['first']  # if the first non-system message has a different template
@@ -281,8 +266,10 @@ class ChatHistory():
                 
                 embed_key = key + '_embedding'
 
-                if logging.getLogger().isEnabledFor(logging.DEBUG):
-                    logging.debug(f"processing chat entry {i}  role='{entry.role}'  template='{role_template}'  open_user_prompt={open_user_prompt}  cached={'true' if embed_key in entry and use_cache else 'false'}  {key}='{entry[key]}'".replace('\n', '\\n'))
+                cached = embed_key in entry and use_cache
+                
+                if logging.getLogger().isEnabledFor(logging.DEBUG) and not cached:
+                    logging.debug(f"processing chat entry {i}  role='{entry.role}' template='{role_template}' open_user_prompt={open_user_prompt} cached={'true' if cached else 'false'} {key}='{entry[key]}'".replace('\n', '\\n'))
                 
                 if use_cache:
                     if embed_key not in entry: # TODO  and entry.role != 'bot'  -- only compute bot embeddings when needed
@@ -310,18 +297,19 @@ class ChatHistory():
 
     def register_embedding(self, type, func):
         params = inspect.signature(func).parameters
-        self.embedding_functions[type] = AttrDict(
+        self.embedding_functions[type] = AttributeDict(
             func=func,
             uses_template=len(params) > 1 #'role_template' in params
         )
         
-    def embedding_type(self, input):
+    @staticmethod
+    def embedding_type(input):
         if isinstance(input, str):
             if input.endswith(ImageExtensions):
                 return 'image'
             else:
                 return "text" 
-        elif isinstance(input, PIL.Image.Image):
+        elif isinstance(input, ImageTypes):
             return 'image'
         elif isinstance(input, list) and len(input) > 0 and isinstance(input[0], str):
             return 'text'
