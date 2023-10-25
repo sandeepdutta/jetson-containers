@@ -84,6 +84,31 @@ RUN pip3 install --no-cache-dir --verbose /opt/pycuda*.whl
 
 # make sure it loads
 RUN pip3 show pycuda && python3 -c 'import pycuda; print(pycuda.VERSION_TEXT)'
+
+################################################################
+# onnxruntime
+################################################################
+ARG ONNXRUNTIME_VERSION=main
+ARG ONNXRUNTIME_FLAGS="--allow_running_as_root"
+ARG CUDA_ARCHITECTURES=72;87
+
+# https://onnxruntime.ai/docs/build/eps.html#nvidia-jetson-tx1tx2nanoxavier
+RUN pip3 uninstall -y onnxruntime && \
+    git clone --branch ${ONNXRUNTIME_VERSION} --depth 1 --recursive https://github.com/microsoft/onnxruntime /tmp/onnxruntime && \
+    cd /tmp/onnxruntime && \
+    ./build.sh --config Release --update --parallel --build --build_wheel \
+        --skip_tests --skip_submodule_sync ${ONNXRUNTIME_FLAGS} \
+        --cmake_extra_defines CMAKE_CXX_FLAGS="-Wno-unused-variable -I/usr/local/cuda/include" CMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHITECTURES}" onnxruntime_BUILD_UNIT_TESTS=OFF \
+        --cuda_home /usr/local/cuda --cudnn_home /usr/lib/$(uname -m)-linux-gnu \
+        --use_tensorrt --tensorrt_home /usr/lib/$(uname -m)-linux-gnu && \
+    cd build/Linux/Release && \
+    make install && \
+    cp dist/onnxruntime_gpu-*.whl /opt && \
+    pip3 install --no-cache-dir --verbose /opt/onnxruntime_gpu-*.whl && \
+    rm -rf /tmp/onnxruntime
+
+# test import and print build info
+RUN python3 -c 'import onnxruntime; print(onnxruntime.__version__);'
 #CMD /bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --allow-root &> /var/log/jupyter.log" & \
 #	echo "allow 10 sec for JupyterLab to start @ http://$(hostname -I | cut -d' ' -f1):8888 (password 19jan1996)" && \
 #	echo "JupterLab logging location:  /var/log/jupyter.log  (inside the container)" && \
