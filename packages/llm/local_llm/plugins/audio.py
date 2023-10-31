@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+import time
 import wave
 import logging
 import pyaudio
 import numpy as np
 
 from local_llm import Plugin
+from local_llm.utils import convert_audio
 
 
 class AudioOutputDevice(Plugin):
@@ -32,9 +34,11 @@ class AudioOutputDevice(Plugin):
         self.sample_width = 2
         self.sample_clip = float(int((2 ** (self.sample_width * 8)) / 2) - 1)  # 32767 for 16-bit
         
+        self.paused = -1
         self.channels = audio_output_channels
         self.current_buffer = None
         self.current_buffer_pos = 0
+        
         
     def run(self):
         """
@@ -55,8 +59,12 @@ class AudioOutputDevice(Plugin):
         """
         samples = np.zeros(frame_count * self.channels, dtype=self.sample_type)
         samples_idx = 0
-        
-        while True:
+
+        if self.interrupted:
+            self.current_buffer = None
+            self.interrupted = False
+            
+        while not self.is_paused():
             if self.current_buffer is None:
                 if not self.input_queue.empty():
                     self.current_buffer = convert_audio(self.input_queue.get(), dtype=self.sample_type)
@@ -78,7 +86,38 @@ class AudioOutputDevice(Plugin):
 
         return (samples, pyaudio.paContinue)
 
+    def pause(self, duration=0):
+        """
+        Pause audio playback for `duration` number of seconds
+        If `duration` is 0, it will be paused until unpaused.
+        If `duration` is negative, it will be unpaused.
+        """
+        if duration <= 0:
+            self.paused = duration
+        else:
+            self.paused = time.perf_counter() + duration
+            logging.debug(f"pausing audio output for {duration} seconds")
+            
+    def unpause(self):
+        """
+        Unpause audio playback
+        """
+        self.pause(-1.0)
+        
+    def is_paused(self):
+        """
+        Returns true if playback is currently paused.
+        """
+        if self.paused < 0:
+            return False
+            
+        if self.paused > 0 and time.perf_counter() >= self.paused:
+            self.paused = -1
+            return False
+            
+        return True
 
+        
 class AudioOutputFile(Plugin):
     """
     Output audio to a wav file
@@ -119,29 +158,6 @@ class AudioOutputFile(Plugin):
         """
         input = convert_audio(input, dtype=self.sample_type)
         self.wav.writeframes(input)
-        
-        
-def convert_audio(samples, dtype=np.int16):
-    """
-    Convert between audio datatypes like float<->int16 and apply sample re-scaling
-    """
-    if samples.dtype == dtype:
-        return samples
-        
-    sample_width = np.dtype(dtype).itemsize
-    max_value = float(int((2 ** (sample_width * 8)) / 2) - 1)  # 32767 for 16-bit
-        
-    if samples.dtype == np.float32 or samples.dtype == np.float64:  # float-to-int
-        samples = samples * max_value
-        samples = samples.clip(-max_value, max_value)
-        samples = samples.astype(dtype)
-    elif dtype == np.float32 or dtype == np.float64:  # int-to-float
-        samples = samples.astype(dtype)
-        samples = samples / max_value
-    else:
-        raise TypeError(f"unsupported audio sample dtype={samples.dtype}")
-        
-    return samples
         
         
 if __name__ == "__main__":

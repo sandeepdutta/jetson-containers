@@ -18,18 +18,24 @@ class Plugin(threading.Thread):
       
     Parameters:
     
-      input_channels (int) -- 
+      output_channels (int) -- the number of sets of output connections the plugin has
       relay (bool) -- if true, will relay any inputs as outputs after processing
-      threaded (bool) -- if true, will process queue from independent thread
+      drop_inputs (bool) -- if true, only the most recent input in the queue will be used
+      threaded (bool) -- if true, will spawn independent thread for processing the queue.
+      
+    TODO:  use queue.task_done() and queue.join() for external synchronization
     """
-    def __init__(self, output_channels=1, relay=False, threaded=True, **kwargs):
+    def __init__(self, output_channels=1, relay=False, drop_inputs=False, threaded=True, **kwargs):
         """
         Initialize plugin
         """
         super().__init__(daemon=True)
 
         self.relay = relay
+        self.drop_inputs = drop_inputs
         self.threaded = threaded
+        self.interrupted = False
+        self.processing = False
         
         self.outputs = [[] for i in range(output_channels)]
         self.output_channels = output_channels
@@ -37,9 +43,7 @@ class Plugin(threading.Thread):
         if threaded:
             self.input_queue = queue.Queue()
             self.input_event = threading.Event()
-            #self.thread = threading.Thread(target=self._run, daemon=True)
-            #self.thread.start()
-        
+
     def process(self, input, **kwargs):
         """
         Abstract process() function that plugin instances should implement.
@@ -55,7 +59,7 @@ class Plugin(threading.Thread):
         """
         raise NotImplementedError(f"plugin {type(self)} has not implemented process()")
     
-    def add(self, plugin, channel=0):
+    def add(self, plugin, channel=0, **kwargs):
         """
         Connect this plugin with another, as either an input or an output.
         By default, this plugin will output to the specified plugin instance.
@@ -69,14 +73,20 @@ class Plugin(threading.Thread):
                         
         Returns a reference to this plugin instance (self)
         """
+        from local_llm.plugins import Callback
+        
         if not isinstance(plugin, Plugin):
             if not callable(plugin):
                 raise TypeError(f"{type(self)}.add() expects either a Plugin instance or a callable function (was {type(plugin)})")
-            from local_llm.plugins import Callback
-            plugin = Callback(plugin)
+            plugin = Callback(plugin, **kwargs)
             
         self.outputs[channel].append(plugin)
-        logging.debug(f"connected plugins {type(self)} -> {type(plugin)}  (channel={channel})")
+        
+        if isinstance(plugin, Callback):
+            logging.debug(f"connected {type(self).__name__} to {plugin.function.__name__} on channel={channel}")  # TODO https://stackoverflow.com/a/25959545
+        else:
+            logging.debug(f"connected {type(self).__name__} to {type(plugin).__name__} on channel={channel}")
+            
         return self
     
     def find(self, type):
@@ -109,7 +119,7 @@ class Plugin(threading.Thread):
         """
         Callable () operator alias for the input() function
         """
-        self.input(input, channel)
+        self.input(input)
         
     def input(self, input):
         """
@@ -117,10 +127,12 @@ class Plugin(threading.Thread):
         TODO:  multiple input channels?
         """
         if self.threaded:
+            if self.drop_inputs:
+                self.clear_inputs()
             self.input_queue.put(input)
             self.input_event.set()
         else:
-            self.update()
+            self.dispatch(input)
             
     def output(self, output, channel=0):
         """
@@ -136,17 +148,7 @@ class Plugin(threading.Thread):
             for output_channel in self.outputs:
                 for output_plugin in output_channel:
                     output_plugin.input(output)
-    
-    def update(self):
-        """
-        Process all items in the queue (use this if created with threaded=False)
-        """
-        while not self.input_queue.empty():
-            input = self.input_queue.get()
-            self.output(self.process(input))
-            if self.relay:
-                self.output(input)
-     
+         
     def start(self):
         """
         Start threads for all plugins in the graph that have threading enabled.
@@ -168,5 +170,51 @@ class Plugin(threading.Thread):
         while True:
             self.input_event.wait()
             self.input_event.clear()
-            self.update()
+            
+            while True:
+                try:
+                    self.dispatch(self.input_queue.get(block=False))
+                except queue.Empty:
+                    break
+
+    def dispatch(self, input):
+        """
+        Invoke the process() function on incoming data
+        """
+        if self.interrupted:
+            #logging.debug(f"{type(self)} resetting interrupted=False")
+            self.interrupted = False
+            
+        self.processing = True
+        outputs = self.process(input)
+        self.processing = False
+        
+        self.output(outputs)
+        
+        if self.relay:
+            self.output(input)
+   
+    def interrupt(self, clear_inputs=True, block=True):
+        """
+        Interrupt any ongoing/pending processing, and optionally clear the input queue.
+        If block is true, this function will wait until any ongoing processing has finished.
+        This is done so that any lingering outputs don't cascade downstream in the pipeline.
+        """
+        if clear_inputs:
+            self.clear_inputs()
+          
+        self.interrupted = True
+        
+        while block and self.processing:
+            continue  # TODO use an event for this?
+        
+    def clear_inputs(self):
+        """
+        Clear the input queue, dropping any data.
+        """
+        while True:
+            try:
+                self.input_queue.get(block=False)
+            except queue.Empty:
+                return         
             

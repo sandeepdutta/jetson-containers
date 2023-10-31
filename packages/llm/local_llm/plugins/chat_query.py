@@ -63,7 +63,8 @@ class ChatQuery(Plugin):
             self.model = LocalLM.from_pretrained(model, **kwargs)
         else:
             self.model = model
-            
+         
+        self.stream = None
         self.chat_history = ChatHistory(self.model, **kwargs)
         
         self.max_new_tokens = kwargs.get('max_new_tokens', 128)
@@ -92,6 +93,9 @@ class ChatQuery(Plugin):
             for x in input:
                 self.process(x, **kwargs)
             return
+         
+        if self.interrupted:
+            return
             
         # handle some special commands
         if isinstance(input, str):
@@ -118,7 +122,7 @@ class ChatQuery(Plugin):
         embedding, position = chat_history.embed_chat()
         
         # start generating output
-        output = self.model.generate(
+        self.stream = self.model.generate(
             embedding, 
             streaming=True, 
             kv_cache=chat_history.kv_cache,
@@ -132,19 +136,26 @@ class ChatQuery(Plugin):
         )
         
         # output the stream iterator on channel 3
-        self.output(output, ChatQuery.OutputStream)
+        self.output(self.stream, ChatQuery.OutputStream)
 
         # output the generated tokens on channel 0
         bot_reply = chat_history.append(role='bot', text='')
         words = ''
         
-        for token in output:
-            words += token
-            bot_reply.text += token
+        for token in self.stream:
+            if self.interrupted:
+                logging.debug(f"LLM interrupted, terminating request early")
+                self.stream.stop()
+                
+            # sync the reply with the entire text, so that multi-token
+            # unicode unicode sequences are detokenized and decoded together
+            bot_reply.text = self.stream.output_text
             
+            # output stream of raw tokens
             self.output(token, ChatQuery.OutputToken)
             
             # if a space was added, emit new word(s)
+            words += token
             last_space = words.rfind(' ')
             
             if last_space >= 0:
@@ -153,19 +164,26 @@ class ChatQuery(Plugin):
                     words = words[last_space+1:]
                 else:
                     words = ''
-                    
-            '''
-            if ' ' in words:  
-                self.output(words, ChatQuery.OutputWords)
-                words = ''
-            '''
             
         if len(words) > 0:
             self.output(words, ChatQuery.OutputWords)
             
-        bot_reply.text = output.output_text
-        self.chat_history.kv_cache = output.kv_cache
+        bot_reply.text = self.stream.output_text
+        self.chat_history.kv_cache = self.stream.kv_cache
+        self.stream = None
         
         # output the final generated text on channel 2
         self.output(bot_reply.text, ChatQuery.OutputFinal)
+    
+    '''
+    def interrupt(self, clear_inputs=True, block=True):
+        """
+        Interrupt any ongoing/pending processing, and optionally clear the input queue.
         
+        """
+        super().interrupt(clear_inputs=clear_inputs)
+        
+        while self.stream is not None:
+            self.stream.stop()
+    '''
+    
