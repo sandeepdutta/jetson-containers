@@ -68,6 +68,7 @@ if [ $ARCH = "aarch64" ]; then
 		-e NVIDIA_DRIVER_CAPABILITIES=all \
 		-e FASTRTPS_DEFAULT_PROFILES_FILE=/usr/local/share/middleware_profiles/rtps_udp_profile.xml \
 		-e ROS_DOMAIN_ID \
+		--user admin \
 		$DATA_VOLUME $V4L2_DEVICES \
 		"$@"
 
