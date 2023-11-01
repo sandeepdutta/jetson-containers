@@ -68,6 +68,20 @@ RUN  chmod +x /usr/local/bin/scripts/*.sh
 RUN wget https://raw.githubusercontent.com/NVIDIA-ISAAC-ROS/isaac_ros_common/main/docker/patches/libcudacxx_aarch64_cuda_11_4.diff -P /tmp && \
 sudo patch -i /tmp/libcudacxx_aarch64_cuda_11_4.diff /usr/local/cuda-11.4/targets/aarch64-linux/include/cuda/std/detail/libcxx/include/cmath
 
+# Install xtl
+RUN git clone https://github.com/xtensor-stack/xtl.git && \
+    cd xtl && mkdir -p build && cd build && \
+    cmake .. && make install 
+
+# Install xsimd
+RUN git clone https://github.com/xtensor-stack/xsimd.git && \
+    cd xsimd && mkdir -p build && cd build && \
+    cmake .. && make install 
+# Install xtensor
+RUN git clone https://github.com/xtensor-stack/xtensor.git && \
+    cd xtensor && mkdir -p build && cd build && \
+    cmake .. && make install 
+    
 
 # Copy middleware profiles
 RUN mkdir -p /usr/local/share/middleware_profiles
