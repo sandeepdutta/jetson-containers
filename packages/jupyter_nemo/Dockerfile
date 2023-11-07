@@ -23,7 +23,7 @@ ENV OPENBLAS_CORETYPE=ARMV8
 RUN pip3 show numpy && python3 -c 'import numpy; print(numpy.__version__)'
 RUN pip3 install --upgrade --no-cache-dir --verbose numpy==1.23.0
 RUN pip3 show numpy && python3 -c 'import numpy; import matplotlib; print(numpy.__version__); print(matplotlib.__version__)'
-#RUN pip3 uninstall -y setuptools0
+#RUN pip3 uninstall -y setuptools
 RUN pip3 install --upgrade --no-cache-dir --verbose setuptools
 RUN pip3 show setuptools && python3 -c 'import setuptools; print(setuptools.__version__)' && \
     python3 -c "from setuptools import setup, Extension, distutils"
@@ -52,7 +52,7 @@ RUN pip3 install --no-cache-dir --verbose jupyter 'jupyterlab<4' && \
     pip3 install --no-cache-dir --verbose jupyterlab_widgets
     
 RUN jupyter lab --version && jupyter lab --generate-config
-RUN python3 -c "from notebook.auth.security import set_password; set_password('19jan1996', '/root/.jupyter/jupyter_notebook_config.json')"
+RUN python3 -c "from notebook.auth.security import set_password; set_password('password', '/root/.jupyter/jupyter_notebook_config.json')"
 
 ################################################################
 ## Riva GRPC
