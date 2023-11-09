@@ -35,9 +35,19 @@ RUN apt-get update && \
 		libsndfile1 \
 		unzip \
         usbutils \
+        python3-rospkg \
+        vim \
+        libomp-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
-    
+
+#RUN wget https://repo.download.nvidia.com/jetson/common/pool/main/libo/libopencv-dev/libopencv-dev_4.5.4-8-g3e4c170df4_arm64.deb
+#RUN apt-get update && \
+#    apt-get install -y --no-install-recommends \
+#        libopencv-dev \
+#    && rm -rf /var/lib/apt/lists/* \
+#    && apt-get clean
+
 RUN pip3 install soundfile pyaudio wave
 # Reuse triton-server user as 'admin' user if exists
 RUN if [ $(getent group triton-server) ]; then \
