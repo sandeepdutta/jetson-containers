@@ -1,1 +1,1 @@
-./build.sh --name=jeeves ros:humble-desktop jeeves rtabmap zed odrive tao user
+./build.sh --name=jeeves ros:humble-desktop jeeves rtabmap zed odrive tao user oakdcamera
