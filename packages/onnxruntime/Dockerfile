@@ -2,20 +2,20 @@
 # name: onnxruntime
 # group: ml
 # config: config.py
-# depends: [cmake, python, numpy, onnx]
+# depends: [cmake, python]
 # test: test.py
 # notes: the onnxruntime-gpu wheel that's built is saved in the container under /opt
 #---
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG ONNXRUNTIME_VERSION=v1.16.1
+ARG ONNXRUNTIME_VERSION=v1.16.1_sd
 ARG ONNXRUNTIME_FLAGS="--allow_running_as_root"
 ARG CUDA_ARCHITECTURES=53;62;72;87
 
 # https://onnxruntime.ai/docs/build/eps.html#nvidia-jetson-tx1tx2nanoxavier
 RUN pip3 uninstall -y onnxruntime && \
-    git clone --branch ${ONNXRUNTIME_VERSION} --depth 1 --recursive https://github.com/microsoft/onnxruntime /tmp/onnxruntime && \
+    git clone --branch ${ONNXRUNTIME_VERSION} --depth 1 --recursive https://github.com/sandeepdutta/onnxruntime /tmp/onnxruntime && \
     cd /tmp/onnxruntime && \
     ./build.sh --config Release --update --parallel --build --build_wheel \
         --skip_tests --skip_submodule_sync ${ONNXRUNTIME_FLAGS} \

@@ -11,7 +11,7 @@ from packaging.version import Version
 protobuf_implementation = str(api_implementation.Type())
 
 if Version(google.protobuf.__version__).major < 4:
-    print(f'protobuf default API implementation: {str(api_implementation._default_implementation_type)}')
+    #print(f'protobuf default API implementation: {str(api_implementation._default_implementation_type)}')
     
 print(f'protobuf active API implementation:  {protobuf_implementation}')
 

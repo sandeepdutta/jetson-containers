@@ -9,7 +9,7 @@ from google.protobuf.internal import api_implementation
 
 protobuf_implementation = str(api_implementation.Type())
 
-print(f'protobuf default API implementation: {str(api_implementation._default_implementation_type)}')
+#print(f'protobuf default API implementation: {str(api_implementation._default_implementation_type)}')
 print(f'protobuf active API implementation:  {protobuf_implementation}')
 
 if protobuf_implementation != "cpp":

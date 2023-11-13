@@ -1,7 +1,7 @@
 #---
 # name : user
 # group : jeeves
-# depends: [ros:humble-desktop]
+# depends : [python]
 #---
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
-RUN pip3 install jetson-stats p
+RUN pip3 install jetson-stats 
 
 ################################################################
 ## install some audio stuff

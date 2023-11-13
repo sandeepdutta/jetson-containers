@@ -1,7 +1,7 @@
 #---
-# name: jupyterlab
+# name: jupyter_nemo
 # group: core
-# depends: [python, numpy, rust]
+# depends: [python]
 # notes: will autostart Jupyter server on port 8888 unless container entry CMD is overridden
 #---
 ARG BASE_IMAGE
@@ -21,7 +21,7 @@ ENV OPENBLAS_CORETYPE=ARMV8
 
 
 RUN pip3 show numpy && python3 -c 'import numpy; print(numpy.__version__)'
-RUN pip3 install --upgrade --no-cache-dir --verbose numpy==1.23.0
+#RUN pip3 install --upgrade --no-cache-dir --verbose numpy==1.23.0
 RUN pip3 show numpy && python3 -c 'import numpy; import matplotlib; print(numpy.__version__); print(matplotlib.__version__)'
 #RUN pip3 uninstall -y setuptools
 RUN pip3 install --upgrade --no-cache-dir --verbose setuptools
@@ -65,50 +65,52 @@ RUN wget --quiet --show-progress --progress=bar:force:noscroll --no-check-certif
     rm ${RIVA_WHL}
 
 ################################################################
-# pycuda
+## install some audio stuff
 ################################################################
-
-ARG PYCUDA_VERSION="main"
-
-RUN cd /opt && \
-    git clone --branch=${PYCUDA_VERSION} --depth=1 --recursive https://github.com/inducer/pycuda && \
-    cd pycuda && \
-    python3 setup.py --verbose build_ext --inplace bdist_wheel && \
-    cp dist/pycuda*.whl /opt && \
-    rm -rf /opt/pycuda
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+		alsa-base \
+        libasound2-dev \
+        alsa-utils \
+        portaudio19-dev \
+		libsndfile1 \
+		unzip \
+        usbutils \
+        python3-rospkg \
+        vim \
+        libomp-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
     
-RUN pip3 install --no-cache-dir --verbose /opt/pycuda*.whl
+RUN pip3 install soundfile pyaudio wave
 
-# this was needed at some point?
-#RUN pip3 install --no-cache-dir --verbose six
+# Setup non-root admin user
+ARG USERNAME=admin
+ARG USER_UID=1000
+ARG USER_GID=1000
 
-# make sure it loads
-RUN pip3 show pycuda && python3 -c 'import pycuda; print(pycuda.VERSION_TEXT)'
+# Create the 'admin' user if not already exists
+RUN if [ ! $(getent passwd ${USERNAME}) ]; then \
+        groupadd --gid ${USER_GID} ${USERNAME} ; \
+        useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} ; \
+    fi
 
-################################################################
-# onnxruntime
-################################################################
-ARG ONNXRUNTIME_VERSION=main
-ARG ONNXRUNTIME_FLAGS="--allow_running_as_root"
-ARG CUDA_ARCHITECTURES=72;87
+# Update 'admin' user
+RUN echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
+    && chmod 0440 /etc/sudoers.d/${USERNAME} \
+    && adduser ${USERNAME} video && adduser ${USERNAME} plugdev && adduser ${USERNAME} sudo && adduser ${USERNAME} dialout \
+    && adduser ${USERNAME} staff && adduser ${USERNAME} root
 
-# https://onnxruntime.ai/docs/build/eps.html#nvidia-jetson-tx1tx2nanoxavier
-RUN pip3 uninstall -y onnxruntime && \
-    git clone --branch ${ONNXRUNTIME_VERSION} --depth 1 --recursive https://github.com/microsoft/onnxruntime /tmp/onnxruntime && \
-    cd /tmp/onnxruntime && \
-    ./build.sh --config Release --update --parallel --build --build_wheel \
-        --skip_tests --skip_submodule_sync ${ONNXRUNTIME_FLAGS} \
-        --cmake_extra_defines CMAKE_CXX_FLAGS="-Wno-unused-variable -I/usr/local/cuda/include" CMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHITECTURES}" onnxruntime_BUILD_UNIT_TESTS=OFF \
-        --cuda_home /usr/local/cuda --cudnn_home /usr/lib/$(uname -m)-linux-gnu \
-        --use_tensorrt --tensorrt_home /usr/lib/$(uname -m)-linux-gnu && \
-    cd build/Linux/Release && \
-    make install && \
-    cp dist/onnxruntime_gpu-*.whl /opt && \
-    pip3 install --no-cache-dir --verbose /opt/onnxruntime_gpu-*.whl && \
-    rm -rf /tmp/onnxruntime
+RUN pip3 install jetson-stats 
 
-# test import and print build info
-RUN python3 -c 'import onnxruntime; print(onnxruntime.__version__);'
+ENV USERNAME=${USERNAME}
+ENV USER_GID=${USER_GID}
+ENV USER_UID=${USER_UID}
+
+# Copy scripts
+RUN mkdir -p /usr/local/bin/scripts
+COPY scripts/*entrypoint.sh /usr/local/bin/scripts/
+RUN  chmod +x /usr/local/bin/scripts/*.sh
 #CMD /bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --allow-root &> /var/log/jupyter.log" & \
 #	echo "allow 10 sec for JupyterLab to start @ http://$(hostname -I | cut -d' ' -f1):8888 (password 19jan1996)" && \
 #	echo "JupterLab logging location:  /var/log/jupyter.log  (inside the container)" && \
