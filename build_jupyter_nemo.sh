@@ -1,1 +1,1 @@
-./build.sh --name=jupyter_nemo --base=dustynv/nemo:r35.4.1 protobuf onnxruntime jupyter_nemo
+./build.sh --name=jupyter_nemo --base=dustynv/nemo:r35.4.1 onnxruntime pycuda jupyter_nemo

@@ -2,7 +2,6 @@
 # name: onnxruntime
 # group: ml
 # config: config.py
-# depends: [cmake, python]
 # test: test.py
 # notes: the onnxruntime-gpu wheel that's built is saved in the container under /opt
 #---

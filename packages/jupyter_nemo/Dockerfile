@@ -1,7 +1,6 @@
 #---
 # name: jupyter_nemo
 # group: core
-# depends: [python]
 # notes: will autostart Jupyter server on port 8888 unless container entry CMD is overridden
 #---
 ARG BASE_IMAGE
@@ -21,7 +20,7 @@ ENV OPENBLAS_CORETYPE=ARMV8
 
 
 RUN pip3 show numpy && python3 -c 'import numpy; print(numpy.__version__)'
-#RUN pip3 install --upgrade --no-cache-dir --verbose numpy==1.23.0
+RUN pip3 install --upgrade --no-cache-dir --verbose numpy==1.23.0
 RUN pip3 show numpy && python3 -c 'import numpy; import matplotlib; print(numpy.__version__); print(matplotlib.__version__)'
 #RUN pip3 uninstall -y setuptools
 RUN pip3 install --upgrade --no-cache-dir --verbose setuptools
@@ -64,6 +63,15 @@ RUN wget --quiet --show-progress --progress=bar:force:noscroll --no-check-certif
     pip3 install ${RIVA_WHL} --verbose && \
     rm ${RIVA_WHL}
 
+# Install prerequisites
+RUN apt-get update && apt-get install -y \
+        sudo \
+        udev \
+        sox \
+        ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
 ################################################################
 ## install some audio stuff
 ################################################################
@@ -81,7 +89,7 @@ RUN apt-get update && \
         libomp-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
-    
+
 RUN pip3 install soundfile pyaudio wave
 
 # Setup non-root admin user
@@ -99,7 +107,7 @@ RUN if [ ! $(getent passwd ${USERNAME}) ]; then \
 RUN echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
     && adduser ${USERNAME} video && adduser ${USERNAME} plugdev && adduser ${USERNAME} sudo && adduser ${USERNAME} dialout \
-    && adduser ${USERNAME} staff && adduser ${USERNAME} root
+    && adduser ${USERNAME} staff && adduser ${USERNAME} root && adduser ${USERNAME} audio
 
 RUN pip3 install jetson-stats 
 

@@ -57,17 +57,6 @@ RUN if [ $(getent group triton-server) ]; then \
         sudo chown ${USERNAME}:${USERNAME} /home/${USERNAME} ; \
     fi
 
-# Create the 'admin' user if not already exists
-RUN if [ ! $(getent passwd ${USERNAME}) ]; then \
-        groupadd --gid ${USER_GID} ${USERNAME} ; \
-        useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} ; \
-    fi
-
-# Update 'admin' user
-RUN echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
-    && chmod 0440 /etc/sudoers.d/${USERNAME} \
-    && adduser ${USERNAME} video && adduser ${USERNAME} plugdev && adduser ${USERNAME} sudo && adduser ${USERNAME} dialout \
-    && adduser ${USERNAME} staff && adduser ${USERNAME} root
 
 # Copy scripts
 RUN mkdir -p /usr/local/bin/scripts

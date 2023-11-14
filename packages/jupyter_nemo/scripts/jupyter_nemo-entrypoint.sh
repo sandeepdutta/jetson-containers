@@ -3,5 +3,5 @@
 echo "allow 10 sec for JupyterLab to start @ http://$(hostname -I | cut -d' ' -f1):8888 (password 19jan1996)" 
 echo "JupterLab logging location:  /home/admin/jupyter.log  (inside the container)" 
 cat /home/admin/jupyter.log
-echo "export PYTHONPATH=/jetson-voice" >> /home/root/.bashrc
+echo "export PYTHONPATH=/jetson-voice" >> /home/admin/.bashrc
 /bin/bash
