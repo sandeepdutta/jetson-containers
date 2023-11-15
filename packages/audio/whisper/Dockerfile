@@ -1,7 +1,6 @@
 #---
 # name: whisper
 # group: audio
-# depends: [numba, numpy, pytorch, torchaudio, jupyterlab]
 # requires: '>=34.1.0'
 # docs: docs.md
 #---

@@ -90,7 +90,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-RUN pip3 install soundfile pyaudio wave
+RUN pip3 install soundfile pyaudio wave pyusb
 
 # Setup non-root admin user
 ARG USERNAME=admin
@@ -119,7 +119,7 @@ ENV USER_UID=${USER_UID}
 RUN mkdir -p /usr/local/bin/scripts
 COPY scripts/*entrypoint.sh /usr/local/bin/scripts/
 RUN  chmod +x /usr/local/bin/scripts/*.sh
-#CMD /bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --allow-root &> /var/log/jupyter.log" & \
-#	echo "allow 10 sec for JupyterLab to start @ http://$(hostname -I | cut -d' ' -f1):8888 (password 19jan1996)" && \
-#	echo "JupterLab logging location:  /var/log/jupyter.log  (inside the container)" && \
-#	/bin/bash
+CMD /bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --allow-root &> /var/log/jupyter.log" & \
+	echo "allow 10 sec for JupyterLab to start @ http://$(hostname -I | cut -d' ' -f1):8888 (password 19jan1996)" && \
+	echo "JupterLab logging location:  /var/log/jupyter.log  (inside the container)" && \
+	/bin/bash
