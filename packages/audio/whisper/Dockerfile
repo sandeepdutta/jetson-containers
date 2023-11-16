@@ -44,6 +44,7 @@ RUN openssl req \
         -out mycert.pem \
         -subj '/CN=localhost'
 
+
 CMD /bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888  --certfile=mycert.pem --keyfile mykey.key --allow-root &> /var/log/jupyter.log" & \
 	echo "allow 10 sec for JupyterLab to start @ https://$(hostname -I | cut -d' ' -f1):8888 (password nvidia)" && \
 	echo "JupterLab logging location:  /var/log/jupyter.log  (inside the container)" && \

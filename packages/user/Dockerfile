@@ -39,7 +39,7 @@ RUN apt-get update && \
         vim \
         libomp-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && apt-get clean *
 
 #RUN wget https://repo.download.nvidia.com/jetson/common/pool/main/libo/libopencv-dev/libopencv-dev_4.5.4-8-g3e4c170df4_arm64.deb
 #RUN apt-get update && \
@@ -48,7 +48,7 @@ RUN apt-get update && \
 #    && rm -rf /var/lib/apt/lists/* \
 #    && apt-get clean
 
-RUN pip3 install soundfile pyaudio wave
+RUN pip3 install soundfile pyaudio wave pyusb
 # Reuse triton-server user as 'admin' user if exists
 RUN if [ $(getent group triton-server) ]; then \
         groupmod -o --gid ${USER_GID} -n ${USERNAME} triton-server ; \
