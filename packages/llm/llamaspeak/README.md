@@ -25,21 +25,22 @@ You can also see this helpful video and guide from JetsonHacks for setting up Ri
 
 ### Load LLM
 
-Next, start [`text-generation-webui`](/packages/llm/text-generation-webui) with the `--api` flag and load your chat model of choice through it's web UI on port 7860:
+Next, start [`text-generation-webui`](/packages/llm/text-generation-webui) (version 1.7) with the `--api` flag and load your chat model of choice through it's web UI on port 7860:
 
 ```bash
-./run.sh --workdir /opt/text-generation-webui $(./autotag text-generation-webui) \
+./run.sh --workdir /opt/text-generation-webui $(./autotag text-generation-webui:1.7) \
    python3 server.py --listen --verbose --api \
 	--model-dir=/data/models/text-generation-webui
 ```
+> **note:** launch the `text-generation-webui:1.7` container to maintain API compatability
 
 Alternatively, you can manually specify the model that you want to load without needing to use the web UI:
 
 ```bash
-./run.sh --workdir /opt/text-generation-webui $(./autotag text-generation-webui) \
+./run.sh --workdir /opt/text-generation-webui $(./autotag text-generation-webui:1.7) \
    python3 server.py --listen --verbose --api \
 	--model-dir=/data/models/text-generation-webui \
-	--model=llama-2-13b-chat.ggmlv3.q4_0.bin \
+	--model=llama-2-13b-chat.Q4_K_M.gguf \
 	--loader=llamacpp \
 	--n-gpu-layers=128 \
 	--n_ctx=4096 \
@@ -91,11 +92,11 @@ The default port is `8050`, but that can be changed with the `--port` argument. 
 
 | **`llamaspeak`** | |
 | :-- | :-- |
-| &nbsp;&nbsp;&nbsp;Builds | [![`llamaspeak_jp51`](https://img.shields.io/github/actions/workflow/status/dusty-nv/jetson-containers/llamaspeak_jp51.yml?label=llamaspeak:jp51)](https://github.com/dusty-nv/jetson-containers/actions/workflows/llamaspeak_jp51.yml) |
+| &nbsp;&nbsp;&nbsp;Builds | [![`llamaspeak_jp51`](https://img.shields.io/github/actions/workflow/status/dusty-nv/jetson-containers/llamaspeak_jp51.yml?label=llamaspeak:jp51)](https://github.com/dusty-nv/jetson-containers/actions/workflows/llamaspeak_jp51.yml) [![`llamaspeak_jp60`](https://img.shields.io/github/actions/workflow/status/dusty-nv/jetson-containers/llamaspeak_jp60.yml?label=llamaspeak:jp60)](https://github.com/dusty-nv/jetson-containers/actions/workflows/llamaspeak_jp60.yml) |
 | &nbsp;&nbsp;&nbsp;Requires | `L4T >=34.1.0` |
 | &nbsp;&nbsp;&nbsp;Dependencies | [`build-essential`](/packages/build-essential) [`python`](/packages/python) [`riva-client:python`](/packages/audio/riva-client) [`numpy`](/packages/numpy) |
 | &nbsp;&nbsp;&nbsp;Dockerfile | [`Dockerfile`](Dockerfile) |
-| &nbsp;&nbsp;&nbsp;Images | [`dustynv/llamaspeak:r35.2.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) `(2023-09-07, 5.0GB)`<br>[`dustynv/llamaspeak:r35.3.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) `(2023-08-29, 5.0GB)`<br>[`dustynv/llamaspeak:r35.4.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) `(2023-11-05, 5.0GB)` |
+| &nbsp;&nbsp;&nbsp;Images | [`dustynv/llamaspeak:r35.2.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) `(2023-09-07, 5.0GB)`<br>[`dustynv/llamaspeak:r35.3.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) `(2023-08-29, 5.0GB)`<br>[`dustynv/llamaspeak:r35.4.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) `(2023-12-05, 5.0GB)` |
 
 </details>
 
@@ -107,7 +108,7 @@ The default port is `8050`, but that can be changed with the `--port` argument. 
 | :-- | :--: | :--: | :--: |
 | &nbsp;&nbsp;[`dustynv/llamaspeak:r35.2.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) | `2023-09-07` | `arm64` | `5.0GB` |
 | &nbsp;&nbsp;[`dustynv/llamaspeak:r35.3.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) | `2023-08-29` | `arm64` | `5.0GB` |
-| &nbsp;&nbsp;[`dustynv/llamaspeak:r35.4.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) | `2023-11-05` | `arm64` | `5.0GB` |
+| &nbsp;&nbsp;[`dustynv/llamaspeak:r35.4.1`](https://hub.docker.com/r/dustynv/llamaspeak/tags) | `2023-12-05` | `arm64` | `5.0GB` |
 
 > <sub>Container images are compatible with other minor versions of JetPack/L4T:</sub><br>
 > <sub>&nbsp;&nbsp;&nbsp;&nbsp;• L4T R32.7 containers can run on other versions of L4T R32.7 (JetPack 4.6+)</sub><br>
