@@ -26,7 +26,26 @@ RUN git clone https://github.com/norlab-ulaval/libpointmatcher.git && \
     mkdir -p ./libpointmatcher/build && cd ./libpointmatcher/build && \
     cmake .. && make -j10 install
 
+RUN git clone --branch ros2 https://github.com/OctoMap/octomap.git octomap &&\
+    mkdir -p ./octomap/build && cd ./octomap/build && \
+    cmake  -DCMAKE_BUILD_TYPE=Release .. && make -j10 install
+
+RUN git clone --recursive https://github.com/stevenlovegrove/Pangolin.git &&\
+    cd Pangolin &&\
+#    ./scripts/install_prerequisites.sh recommended &&\
+    mkdir build && cd build && cmake .. &&\
+    make -j10 install
+
+#RUN git clone https://github.com/sandeepdutta/ORB_SLAM3.git &&\
+#    cd ORB_SLAM3 &&\
+#    git fetch origin pull/970/head:noetic-devel &&\
+#    git checkout noetic-devel &&\
+#    wget https://gist.githubusercontent.com/matlabbe/c10403c5d44af85cc3585c0e1c601a60/raw/48adf04098960d86ddf225f1a8c68af87bfcf56e/orbslam2_f2e6f51_marchnative_disabled.patch &&\
+#    git apply orbslam2_f2e6f51_marchnative_disabled.patch &&\
+#    ./build.sh
+
 RUN git clone https://github.com/sandeepdutta/rtabmap.git rtabmap &&\
+    cd ./rtabmap && git checkout master && cd .. &&\
     mkdir -p ./rtabmap/build && cd ./rtabmap/build && \
     cmake .. && make -j10 install
 
