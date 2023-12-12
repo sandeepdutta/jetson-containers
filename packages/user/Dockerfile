@@ -48,7 +48,7 @@ RUN apt-get update && \
 #    && rm -rf /var/lib/apt/lists/* \
 #    && apt-get clean
 
-RUN pip3 install soundfile pyaudio wave pyusb
+RUN pip3 install soundfile pyaudio wave pyusb smbus
 # Reuse triton-server user as 'admin' user if exists
 RUN if [ $(getent group triton-server) ]; then \
         groupmod -o --gid ${USER_GID} -n ${USERNAME} triton-server ; \
@@ -67,7 +67,8 @@ RUN if [ ! $(getent passwd ${USERNAME}) ]; then \
 RUN echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
     && adduser ${USERNAME} video && adduser ${USERNAME} plugdev && adduser ${USERNAME} sudo && adduser ${USERNAME} dialout \
-    && adduser ${USERNAME} staff && adduser ${USERNAME} root && adduser ${USERNAME} audio
+    && adduser ${USERNAME} staff && adduser ${USERNAME} root && adduser ${USERNAME} audio && adduser ${USERNAME} i2c \
+    && adduser ${USERNAME} rtkit
 
 # Copy scripts
 RUN mkdir -p /usr/local/bin/scripts
@@ -97,6 +98,7 @@ RUN git clone https://github.com/xtensor-stack/xtensor.git && \
 RUN mkdir -p /usr/local/share/middleware_profiles
 COPY middleware_profiles/*profile.xml /usr/local/share/middleware_profiles/
 RUN chown -R admin /usr/local
+COPY 99-gpio.rules /etc/udev/rules.d/99-gpio.rules 
 ENV USERNAME=${USERNAME}
 ENV USER_GID=${USER_GID}
 ENV USER_UID=${USER_UID}

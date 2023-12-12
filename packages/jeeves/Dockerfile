@@ -1,7 +1,7 @@
 #---
 # name : jeeves
 # group : jeeves
-# depends: [ros:humble-desktop]
+# depends: []
 #---
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
@@ -38,7 +38,7 @@ RUN source ${ROS_ROOT}/install/setup.bash && \
 RUN mkdir -p ${ROS_ROOT}/src && \
     source ${ROS_ROOT}/install/setup.bash && \
     cd ${ROS_ROOT} && \
-    rosinstall_generator --rosdistro ${ROS_DISTRO} xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters diagnostics diagnostic_updater | vcs import src && \
+    rosinstall_generator --rosdistro ${ROS_DISTRO} xacro joint_state_publisher topic_tools_interfaces topic_tools filters laser_filters diagnostics diagnostic_updater | vcs import src && \
     colcon build --merge-install --packages-select xacro joint_state_publisher topic_tools_interfaces topic_tools laser_filters diagnostics diagnostic_updater
     #rm -Rf src build log 
 
@@ -180,4 +180,6 @@ RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
 #    && apt-get clean
 
 RUN apt-get update && apt-get install net-tools usbutils libpcl-dev libgeographic-dev gdb libpcap-dev iputils-ping -y
+
+RUN pip3 install Jetson.GPIO
 

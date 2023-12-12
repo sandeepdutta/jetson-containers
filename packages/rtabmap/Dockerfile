@@ -1,7 +1,7 @@
 #---
 # name : rtabmap
 # group : jeeves
-# depends: [ros:humble-desktop]
+# depends: []
 #---
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
