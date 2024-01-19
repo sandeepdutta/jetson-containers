@@ -1,4 +1,4 @@
 SUBSYSTEM=="gpio*", PROGRAM="/bin/sh -c '\
     chown -R root:gpio /sys/class/gpio && chmod -R 770 /sys/class/gpio;\
-    chown -R root:gpio /dev/gpiochip0 && chmod -R 660 /dev/gpiochip0\
+    chown -R root:gpio /dev/gpiochip0 && chmod -R 666 /dev/gpiochip0\
 '"

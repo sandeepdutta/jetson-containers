@@ -30,9 +30,14 @@ RUN git clone --branch ros2 https://github.com/OctoMap/octomap.git octomap &&\
     mkdir -p ./octomap/build && cd ./octomap/build && \
     cmake  -DCMAKE_BUILD_TYPE=Release .. && make -j10 install
 
+RUN apt-get update && \
+    apt-get install -y libavdevice-dev libavdevice58 libavfilter-dev libc++-10-dev libc++-dev \
+        libc++1-10 libc++abi1-10 libcdio-cdda2 libcdio-paranoia2 libpostproc-dev \
+        ninja-build wayland-protocols
+
 RUN git clone --recursive https://github.com/stevenlovegrove/Pangolin.git &&\
     cd Pangolin &&\
-#    ./scripts/install_prerequisites.sh recommended &&\
+    ./scripts/install_prerequisites.sh recommended &&\
     mkdir build && cd build && cmake .. &&\
     make -j10 install
 
@@ -63,3 +68,5 @@ RUN mkdir -p ${ROS_ROOT}/src && \
     rosdep install --from-paths src --ignore-src -r -y  \ 
     --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-5.3.1" && \
     colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo --packages-select pcl_msgs pcl_conversions pcl_ros 
+
+RUN apt-get update && apt-get install libboost-serialization-dev

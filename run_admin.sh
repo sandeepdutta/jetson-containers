@@ -69,6 +69,7 @@ if [ $ARCH = "aarch64" ]; then
 		-e FASTRTPS_DEFAULT_PROFILES_FILE=/usr/local/share/middleware_profiles/rtps_udp_profile.xml \
 		-e ROS_DOMAIN_ID \
 		--user admin \
+		--shm-size 2gb \
 		$DATA_VOLUME $V4L2_DEVICES \
 		"$@"
 

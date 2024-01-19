@@ -66,9 +66,10 @@ RUN if [ ! $(getent passwd ${USERNAME}) ]; then \
 # Update 'admin' user
 RUN echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
+    && addgroup gpio \
     && adduser ${USERNAME} video && adduser ${USERNAME} plugdev && adduser ${USERNAME} sudo && adduser ${USERNAME} dialout \
     && adduser ${USERNAME} staff && adduser ${USERNAME} root && adduser ${USERNAME} audio && adduser ${USERNAME} i2c \
-    && adduser ${USERNAME} rtkit
+    && adduser ${USERNAME} rtkit && adduser ${USERNAME} gpio
 
 # Copy scripts
 RUN mkdir -p /usr/local/bin/scripts
@@ -92,13 +93,14 @@ RUN git clone https://github.com/xtensor-stack/xsimd.git && \
 RUN git clone https://github.com/xtensor-stack/xtensor.git && \
     cd xtensor && mkdir -p build && cd build && \
     cmake .. && make install 
-    
 
 # Copy middleware profiles
 RUN mkdir -p /usr/local/share/middleware_profiles
 COPY middleware_profiles/*profile.xml /usr/local/share/middleware_profiles/
 RUN chown -R admin /usr/local
+
 COPY 99-gpio.rules /etc/udev/rules.d/99-gpio.rules 
+
 ENV USERNAME=${USERNAME}
 ENV USER_GID=${USER_GID}
 ENV USER_UID=${USER_UID}

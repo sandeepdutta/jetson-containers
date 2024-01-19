@@ -126,6 +126,14 @@ RUN apt-get update \
     && rm -Rf src build log 
 
 
+RUN source ${ROS_ROOT}/install/setup.sh && \
+    mkdir -p ${ROS_ROOT}/src &&\
+    cd ${ROS_ROOT}/src &&\
+    git clone https://github.com/robofoundry/aws-deepracer-imu-pkg.git && \
+    cd aws-deepracer-imu-pkg && . imu_pkg/scripts/load_ros2_imu_tools_repo.sh && \
+    cd ${ROS_ROOT} && colcon build --merge-install &&\
+    rm -Rf src build log 
+
 # Install nav2
 RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
     && git clone https://github.com/ros-planning/navigation2.git && cd navigation2 && git checkout ec49c2772a0926c86ca83a4933c664744712e2e9 && cd .. \
@@ -182,4 +190,6 @@ RUN apt-get update && mkdir -p ${ROS_ROOT}/src && cd ${ROS_ROOT}/src \
 RUN apt-get update && apt-get install net-tools usbutils libpcl-dev libgeographic-dev gdb libpcap-dev iputils-ping -y
 
 RUN pip3 install Jetson.GPIO
+# Required for IMU
+RUN pip3  install BMI160-i2c smbus2
 

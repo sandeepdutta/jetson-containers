@@ -27,7 +27,7 @@ RUN apt-get update && \
     && apt-get clean
 
 # https://github.com/IntelRealSense/librealsense/issues/11931
-ARG LIBREALSENSE_VERSION=development
+ARG LIBREALSENSE_VERSION=v2.54.2
 
 RUN git clone --branch ${LIBREALSENSE_VERSION} --depth=1 https://github.com/IntelRealSense/librealsense && \
     cd librealsense && \
@@ -38,7 +38,7 @@ RUN git clone --branch ${LIBREALSENSE_VERSION} --depth=1 https://github.com/Inte
 	   -DFORCE_RSUSB_BACKEND=true \
 	   -DBUILD_WITH_CUDA=true \
 	   -DCMAKE_BUILD_TYPE=release \
-	   -DBUILD_PYTHON_BINDINGS=bool:true \
+	   -DBUILD_PYTHON_BINDINGS=true \
 	   -DPYTHON_EXECUTABLE=/usr/bin/python3 \
 	   -DPYTHON_INSTALL_DIR=$(python3 -c 'import sys; print(f"/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/dist-packages")') \
 	   ../ && \
