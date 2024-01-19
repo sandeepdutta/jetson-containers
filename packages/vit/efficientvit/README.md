@@ -9,11 +9,11 @@ docs.md
 
 | **`efficientvit`** | |
 | :-- | :-- |
-| &nbsp;&nbsp;&nbsp;Builds | [![`efficientvit_jp51`](https://img.shields.io/github/actions/workflow/status/dusty-nv/jetson-containers/efficientvit_jp51.yml?label=efficientvit:jp51)](https://github.com/dusty-nv/jetson-containers/actions/workflows/efficientvit_jp51.yml) |
+| &nbsp;&nbsp;&nbsp;Builds | [![`efficientvit_jp60`](https://img.shields.io/github/actions/workflow/status/dusty-nv/jetson-containers/efficientvit_jp60.yml?label=efficientvit:jp60)](https://github.com/dusty-nv/jetson-containers/actions/workflows/efficientvit_jp60.yml) [![`efficientvit_jp51`](https://img.shields.io/github/actions/workflow/status/dusty-nv/jetson-containers/efficientvit_jp51.yml?label=efficientvit:jp51)](https://github.com/dusty-nv/jetson-containers/actions/workflows/efficientvit_jp51.yml) |
 | &nbsp;&nbsp;&nbsp;Requires | `L4T >=34.1.0` |
-| &nbsp;&nbsp;&nbsp;Dependencies | [`build-essential`](/packages/build-essential) [`cuda`](/packages/cuda/cuda) [`cudnn`](/packages/cuda/cudnn) [`python`](/packages/python) [`tensorrt`](/packages/tensorrt) [`numpy`](/packages/numpy) [`cmake`](/packages/cmake/cmake_pip) [`onnx`](/packages/onnx) [`pytorch:2.0-distributed`](/packages/pytorch) [`torchvision`](/packages/pytorch/torchvision) [`opencv`](/packages/opencv) [`huggingface_hub`](/packages/llm/huggingface_hub) [`rust`](/packages/rust) [`transformers`](/packages/llm/transformers) [`onnxruntime`](/packages/onnxruntime) [`jupyterlab`](/packages/jupyterlab) [`sam`](/packages/vit/sam) |
+| &nbsp;&nbsp;&nbsp;Dependencies | [`build-essential`](/packages/build-essential) [`cuda`](/packages/cuda/cuda) [`cudnn`](/packages/cuda/cudnn) [`python`](/packages/python) [`tensorrt`](/packages/tensorrt) [`numpy`](/packages/numpy) [`cmake`](/packages/cmake/cmake_pip) [`onnx`](/packages/onnx) [`pytorch:distributed`](/packages/pytorch) [`torchvision`](/packages/pytorch/torchvision) [`opencv`](/packages/opencv) [`huggingface_hub`](/packages/llm/huggingface_hub) [`rust`](/packages/rust) [`transformers`](/packages/llm/transformers) [`onnxruntime`](/packages/onnxruntime) [`jupyterlab`](/packages/jupyterlab) [`sam`](/packages/vit/sam) |
 | &nbsp;&nbsp;&nbsp;Dockerfile | [`Dockerfile`](Dockerfile) |
-| &nbsp;&nbsp;&nbsp;Images | [`dustynv/efficientvit:r35.4.1`](https://hub.docker.com/r/dustynv/efficientvit/tags) `(2023-11-13, 10.1GB)` |
+| &nbsp;&nbsp;&nbsp;Images | [`dustynv/efficientvit:r35.4.1`](https://hub.docker.com/r/dustynv/efficientvit/tags) `(2024-01-13, 6.5GB)`<br>[`dustynv/efficientvit:r36.2.0`](https://hub.docker.com/r/dustynv/efficientvit/tags) `(2024-01-13, 8.1GB)` |
 
 </details>
 
@@ -23,7 +23,8 @@ docs.md
 
 | Repository/Tag | Date | Arch | Size |
 | :-- | :--: | :--: | :--: |
-| &nbsp;&nbsp;[`dustynv/efficientvit:r35.4.1`](https://hub.docker.com/r/dustynv/efficientvit/tags) | `2023-11-13` | `arm64` | `10.1GB` |
+| &nbsp;&nbsp;[`dustynv/efficientvit:r35.4.1`](https://hub.docker.com/r/dustynv/efficientvit/tags) | `2024-01-13` | `arm64` | `6.5GB` |
+| &nbsp;&nbsp;[`dustynv/efficientvit:r36.2.0`](https://hub.docker.com/r/dustynv/efficientvit/tags) | `2024-01-13` | `arm64` | `8.1GB` |
 
 > <sub>Container images are compatible with other minor versions of JetPack/L4T:</sub><br>
 > <sub>&nbsp;&nbsp;&nbsp;&nbsp;• L4T R32.7 containers can run on other versions of L4T R32.7 (JetPack 4.6+)</sub><br>

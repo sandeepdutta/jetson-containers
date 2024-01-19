@@ -1,15 +1,15 @@
-name: "mlc-9bf5723_jp60"
-run-name: "Build mlc:9bf5723 (JetPack 6.0)"
+name: "audiocraft_jp60"
+run-name: "Build audiocraft (JetPack 6.0)"
 on:
   workflow_dispatch: {}
   push:
     branches:
       - 'dev'
     paths:
-      - '.github/workflows/mlc-9bf5723_jp60.yml'
-      - 'packages/llm/mlc/*'
-      - '!packages/llm/mlc/README.md'
-      - '!packages/llm/mlc/docs.md'
+      - '.github/workflows/audiocraft_jp60.yml'
+      - 'packages/audio/audiocraft/*'
+      - '!packages/audio/audiocraft/README.md'
+      - '!packages/audio/audiocraft/docs.md'
       - 'packages/build-essential/*'
       - '!packages/build-essential/README.md'
       - '!packages/build-essential/docs.md'
@@ -40,6 +40,12 @@ on:
       - 'packages/pytorch/torchvision/*'
       - '!packages/pytorch/torchvision/README.md'
       - '!packages/pytorch/torchvision/docs.md'
+      - 'packages/pytorch/torchaudio/*'
+      - '!packages/pytorch/torchaudio/README.md'
+      - '!packages/pytorch/torchaudio/docs.md'
+      - 'packages/opencv/*'
+      - '!packages/opencv/README.md'
+      - '!packages/opencv/docs.md'
       - 'packages/llm/huggingface_hub/*'
       - '!packages/llm/huggingface_hub/README.md'
       - '!packages/llm/huggingface_hub/docs.md'
@@ -49,8 +55,17 @@ on:
       - 'packages/llm/transformers/*'
       - '!packages/llm/transformers/README.md'
       - '!packages/llm/transformers/docs.md'
+      - 'packages/llm/xformers/*'
+      - '!packages/llm/xformers/README.md'
+      - '!packages/llm/xformers/docs.md'
+      - 'packages/protobuf/protobuf_cpp/*'
+      - '!packages/protobuf/protobuf_cpp/README.md'
+      - '!packages/protobuf/protobuf_cpp/docs.md'
+      - 'packages/jupyterlab/*'
+      - '!packages/jupyterlab/README.md'
+      - '!packages/jupyterlab/docs.md'
 jobs:
-  mlc-9bf5723_jp60:
+  audiocraft_jp60:
     runs-on: [self-hosted, jetson, jp60]
     steps:
       - run: |
@@ -67,4 +82,4 @@ jobs:
          git checkout $GITHUB_SHA 
          git status 
          ls -a 
-      - run: ./build.sh --name=runner/ --push=dustynv mlc:9bf5723
+      - run: ./build.sh --name=runner/ --push=dustynv audiocraft

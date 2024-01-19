@@ -1,7 +1,7 @@
 
 from jetson_containers import L4T_VERSION, CUDA_ARCHITECTURES
 
-def pytorch(version, whl, url, requires, default=False):
+def pytorch(version, whl, url, requires, default=False, alias=None):
     """
     Create a version of PyTorch for the package list
     """
@@ -12,10 +12,14 @@ def pytorch(version, whl, url, requires, default=False):
     
     if default:
         pkg['alias'].extend(['pytorch', 'torch'])
+    
+    if alias:
+        pkg['alias'].append(alias)
         
     pkg['build_args'] = {
         'PYTORCH_WHL': whl,
         'PYTORCH_URL': url,
+        'TORCH_CUDA_ARCH_ARGS': ';'.join([f'{x/10:.1f}' for x in CUDA_ARCHITECTURES]) # retained as $TORCH_CUDA_ARCH_LIST
     }
 
     pkg['requires'] = requires
@@ -23,7 +27,7 @@ def pytorch(version, whl, url, requires, default=False):
     return pkg
 
 
-def pytorch_build(version, dockerfile='Dockerfile.builder', build_env_variables=None, depends=None, requires=None, suffix=None, default=False):
+def pytorch_build(version, dockerfile='Dockerfile.builder', build_env_variables=None, depends=None, requires=None, suffix=None, default=False, alias=None):
     """
     Create a version of PyTorch for the package list
     """
@@ -35,9 +39,14 @@ def pytorch_build(version, dockerfile='Dockerfile.builder', build_env_variables=
     if suffix:
         pkg['name'] += '-' + suffix
         pkg['alias'] += '-' + suffix
-        
+    
+    pkg['alias'] = [pkg['alias']]
+    
     if default:
-        pkg['alias'] = [pkg['alias'], 'pytorch', 'torch']
+        pkg['alias'].extend(['pytorch', 'torch'])
+        
+    if alias:
+        pkg['alias'].append(alias)
 
     pkg['dockerfile'] = dockerfile
 
@@ -48,7 +57,7 @@ def pytorch_build(version, dockerfile='Dockerfile.builder', build_env_variables=
         'PYTORCH_BUILD_VERSION': version,
         'PYTORCH_BUILD_NUMBER': '1',
         'PYTORCH_BUILD_EXTRA_ENV': build_env_variables,
-        'TORCH_CUDA_ARCH_LIST': ';'.join([f'{x/10:.1f}' for x in CUDA_ARCHITECTURES]),
+        'TORCH_CUDA_ARCH_ARGS': ';'.join([f'{x/10:.1f}' for x in CUDA_ARCHITECTURES]), # retained as $TORCH_CUDA_ARCH_LIST
     }
     
     if depends:
@@ -61,7 +70,7 @@ def pytorch_build(version, dockerfile='Dockerfile.builder', build_env_variables=
 
 package = [
     # JetPack 6
-    pytorch('2.1', 'torch-2.1.0-cp310-cp310-linux_aarch64.whl', 'https://nvidia.box.com/shared/static/0h6tk4msrl9xz3evft9t0mpwwwkw7a32.whl', '==36.*', default=True),
+    pytorch('2.1', 'torch-2.1.0-cp310-cp310-linux_aarch64.whl', 'https://nvidia.box.com/shared/static/0h6tk4msrl9xz3evft9t0mpwwwkw7a32.whl', '==36.*', default=True, alias='pytorch:distributed'),
     
     # JetPack 5
     pytorch('2.1', 'torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl', 'https://developer.download.nvidia.com/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl', '==35.*'),
@@ -77,6 +86,6 @@ package = [
 
     # Build from source
     pytorch_build('2.0', suffix='distributed', requires='==35.*'),            
-    pytorch_build('2.1', suffix='distributed', requires='==35.*'),        
+    pytorch_build('2.1', suffix='distributed', requires='==35.*', alias='pytorch:distributed'),        
     pytorch_build('2.1', suffix='builder', requires='==36.*'),
 ]
