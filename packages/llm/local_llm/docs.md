@@ -3,6 +3,7 @@
 
 * Optimized LLM inference engine with support for AWQ and MLC quantization, multimodal agents, and live ASR/TTS.
 * Web UI server using Flask, WebSockets, WebAudio, HTML5, Bootstrap5.
+* Modes to run: [Text Chat](#text-chat), [Multimodal Chat](#multimodal-chat), [Voice Chat](#voice-chat), [Live Llava](#live-llava)
 
 ## Text Chat
 
@@ -12,9 +13,16 @@ As an initial example, first test the console-based chat demo from [`__main__.py
 ./run.sh --env HUGGINGFACE_TOKEN=<YOUR-ACCESS-TOKEN> $(./autotag local_llm) \
   python3 -m local_llm --api=mlc --model=meta-llama/Llama-2-7b-chat-hf
 ```
-> For Llama-2 models, see [here](/packages/llm/transformers/README.md#llama2) to request your access token from HuggingFace
 
-The model will automatically be quantized the first time it's loaded (in this case, with MLC W4A16 quantization)
+> [!NOTE]  
+> Tested models:
+>   * [`meta-llama/Llama-2-7b-chat-hf`](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf)
+>   * [`meta-llama/Llama-2-13b-chat-hf`](https://huggingface.co/meta-llama/Llama-2-13b-chat-hf)
+>   * [`meta-llama/Llama-2-70b-chat-hf`](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf)
+>
+> For Llama-2 models, see [here](/packages/llm/transformers/README.md#llama2) to request your access token from HuggingFace.
+
+The model will automatically be quantized the first time it's loaded (in this case, with MLC and 4-bit).  Other fine-tuned versions of Llama that have the same architecture (or are supported by the quantization API you have selected) should be compatible - see [here](https://github.com/mlc-ai/mlc-llm/tree/main/mlc_llm/relax_model) for MLC.
 
 ### Command-Line Options
 
@@ -68,12 +76,10 @@ If you load a Llava vision-language model, you can enter image files into the pr
     --prompt 'what does the sign say?'
 ```
 
-> [!WARNING]  
-> Patch the model's [`config.json`](https://huggingface.co/liuhaotian/llava-v1.5-13b/blob/main/config.json) that was downloaded under `data/models/huggingface/models--liuhaotian--llava-v1.5-13b/snapshots/*`
->   * modify `"model_type": "llava",`
->   * to `"model_type": "llama",` <br/>
->
-> Then re-run the command above - the quantization tools will then treat it like a Llama model (which it is)
+> [!NOTE]  
+> Tested models:
+>   * [`liuhaotian/llava-v1.5-7b`](https://huggingface.co/liuhaotian/llava-v1.5-7b)
+>   * [`liuhaotian/llava-v1.5-13b`](https://huggingface.co/liuhaotian/llava-v1.5-13b)
 
 Llava was trained to converse about one image at a time, hence the chat history is reset between images (otherwise the model tends to combine the features of all the images in the chat so far).  Multiple questions can be asked about each image though.
 
@@ -119,9 +125,9 @@ You can choose to override this, and it won't re-appear again until you change c
   -e SSL_KEY=/data/key.pem \
   -e SSL_CERT=/data/cert.pem \
   $(./autotag local_llm) \
-  python3 -m local_llm.agents.web_chat \
-    --model meta-llama/Llama-2-7b-chat-hf \
-    --api=mlc --verbose
+    python3 -m local_llm.agents.web_chat \
+      --model meta-llama/Llama-2-7b-chat-hf \
+      --api=mlc --verbose
 ```
 
 You can then navigate your web browser to `https://HOSTNAME:8050` and unmute your microphone.
@@ -131,17 +137,52 @@ You can then navigate your web browser to `https://HOSTNAME:8050` and unmute you
 * During bot replies, the TTS model will pause output if you speak a few words in the mic to interrupt it.
 * If you loaded a multimodal Llava model instead, you can drag-and-drop images from the client. 
   
-## Tested Models
+## Live Llava
 
-Llama 2:
+<a href="https://youtu.be/X-OXxPiUTuU" target="_blank"><img src="https://raw.githubusercontent.com/dusty-nv/jetson-containers/docs/docs/images/live_llava.gif"></a>
 
-* [`meta-llama/Llama-2-7b-chat-hf`](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf)
-* [`meta-llama/Llama-2-13b-chat-hf`](https://huggingface.co/meta-llama/Llama-2-13b-chat-hf)
-* [`meta-llama/Llama-2-70b-chat-hf`](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf)
+The [`VideoQuery`](agents/video_query.py) agent processes an incoming camera or video feed on prompts in a closed loop with Llava.  
 
-LLaVA:  
+```bash
+./run.sh \
+  -e SSL_KEY=/data/key.pem -e SSL_CERT=/data/cert.pem \
+  $(./autotag local_llm) \
+	python3 -m local_llm.agents.video_query --api=mlc --verbose \
+	  --model liuhaotian/llava-v1.5-7b \
+	  --max-new-tokens 32 \
+	  --video-input /dev/video0 \
+	  --video-output webrtc://@:8554/output \
+	  --prompt "How many fingers am I holding up?"
+```
+> see the [Enabling HTTPS/SSL](#enabling-httpsssl) section above to generate self-signed SSL certificates for enabling client-side browser webcams.
 
-* [`liuhaotian/llava-v1.5-7b`](https://huggingface.co/liuhaotian/llava-v1.5-7b)
-* [`liuhaotian/llava-v1.5-13b`](https://huggingface.co/liuhaotian/llava-v1.5-13b)
+This uses [`jetson_utils`](https://github.com/dusty-nv/jetson-utils) for video I/O, and for options related to protocols and file formats, see [Camera Streaming and Multimedia](https://github.com/dusty-nv/jetson-inference/blob/master/docs/aux-streaming.md).  In the example above, it captures a V4L2 USB webcam connected to the Jetson (under the device `/dev/video0`) and outputs a WebRTC stream that can be viewed at `https://HOSTNAME:8554`.  When HTTPS/SSL is enabled, it can also capture from the browser's webcam over WebRTC.
 
-Any fine-tuned version of Llama or Llava that shares the same architecture (or that is supported by the quantization API you have selected) should be compatible, like Vicuna, CodeLlama, ect.  See [here](https://github.com/mlc-ai/mlc-llm/tree/main/mlc_llm/relax_model) for the MLC model architectures.
+### Changing the Prompt 
+
+The `--prompt` can be specified multiple times, and changed at runtime by pressing the number of the prompt followed by enter on the terminal's keyboard (for example, <kbd>1</kbd> + <kbd>Enter</kbd> for the first prompt).  These are the default prompts when no `--prompt` is specified:
+
+1. Describe the image concisely.
+2. How many fingers is the person holding up?
+3. What does the text in the image say?
+4. There is a question asked in the image.  What is the answer?
+
+Future versions of this demo will have the prompts dynamically editable from the web UI.
+
+### Processing a Video File or Stream
+
+The example above was running on a live camera, but you can also read and write a [video file or stream](https://github.com/dusty-nv/jetson-inference/blob/master/docs/aux-streaming.md) by substituting the path or URL to the `--video-input` and `--video-output` command-line arguments like this:
+
+```bash
+./run.sh \
+  -v /path/to/your/videos:/mount
+  $(./autotag local_llm) \
+	python3 -m local_llm.agents.video_query --api=mlc --verbose \
+	  --model liuhaotian/llava-v1.5-7b \
+	  --max-new-tokens 32 \
+	  --video-input /mount/my_video.mp4 \
+	  --video-output /mount/output.mp4 \
+	  --prompt "What does the weather look like?"
+```
+
+This example processes and pre-recorded video (in MP4, MKV, AVI, FLV formats with H.264/H.265 encoding), but it also can input/output live network streams like [RTP](https://github.com/dusty-nv/jetson-inference/blob/master/docs/aux-streaming.md#rtp), [RTSP](https://github.com/dusty-nv/jetson-inference/blob/master/docs/aux-streaming.md#rtsp), and [WebRTC](https://github.com/dusty-nv/jetson-inference/blob/master/docs/aux-streaming.md#webrtc) using Jetson's hardware-accelerated video codecs.
