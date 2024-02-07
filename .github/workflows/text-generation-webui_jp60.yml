@@ -1,12 +1,12 @@
-name: "text-generation-webui-main_jp60"
-run-name: "Build text-generation-webui:main (JetPack 6.0)"
+name: "text-generation-webui_jp60"
+run-name: "Build text-generation-webui (JetPack 6.0)"
 on:
   workflow_dispatch: {}
   push:
     branches:
       - 'dev'
     paths:
-      - '.github/workflows/text-generation-webui-main_jp60.yml'
+      - '.github/workflows/text-generation-webui_jp60.yml'
       - 'packages/llm/text-generation-webui/*'
       - '!packages/llm/text-generation-webui/README.md'
       - '!packages/llm/text-generation-webui/docs.md'
@@ -82,4 +82,4 @@ jobs:
          git checkout $GITHUB_SHA 
          git status 
          ls -a 
-      - run: ./build.sh --name=runner/ --push=dustynv text-generation-webui:main
+      - run: ./build.sh --name=runner/ --push=dustynv text-generation-webui
