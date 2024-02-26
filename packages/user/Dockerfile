@@ -38,6 +38,7 @@ RUN apt-get update && \
         python3-rospkg \
         vim \
         libomp-dev \
+        can-utils \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean *
 

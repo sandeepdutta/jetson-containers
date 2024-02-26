@@ -1,7 +1,7 @@
 #---
 # name: realsense
 # group: sensors
-# depends: [python, cmake]
+# depends: [cuda, python, cmake]
 # test: test.py
 # notes: https://github.com/IntelRealSense/librealsense/blob/master/doc/installation_jetson.md
 #---
@@ -17,7 +17,8 @@ RUN apt-get update && \
             libglfw3-dev \
 		  libgl1-mesa-dev \
 		  libglu1-mesa-dev \
-		  qtcreator && \
+		  qtcreator \
+		  udev && \
     if [ $(lsb_release -cs) = "bionic" ]; then \
         apt-get install -y --no-install-recommends python-dev; \
     else \
